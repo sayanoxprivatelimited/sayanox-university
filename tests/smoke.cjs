@@ -8,18 +8,20 @@ function el(id) {
 const filters = ['all','programming','web','fundamentals'].map(x => ({dataset:{filter:x}, classList:{toggle(){}}, addEventListener(type,fn){this.fn=fn}}));
 let printed = false;
 const store = new Map();
-class FakeFormData { get(key) { return ['0','0','0'][Number(key.replace('question',''))] ?? null; } }
-const context = {document:{getElementById:el,querySelectorAll:()=>filters},localStorage:{getItem(key){return store.has(key) ? store.get(key) : null},setItem(key,value){store.set(key,value)},removeItem(key){store.delete(key)}},window:{print(){printed=true}},FormData:FakeFormData,Intl,Date,console,setTimeout,clearTimeout};
+let fakeAnswers = ['0','0','0','0','0','0','0','0'];
+class FakeFormData { get(key) { return fakeAnswers[Number(key.replace('question',''))] ?? null; } }
+const context = {document:{getElementById:el,querySelectorAll:()=>filters,createTreeWalker:()=>({nextNode(){return false}})},localStorage:{getItem(key){return store.has(key) ? store.get(key) : null},setItem(key,value){store.set(key,value)},removeItem(key){store.delete(key)}},window:{print(){printed=true},location:{search:''}},URLSearchParams,FormData:FakeFormData,crypto:{getRandomValues(a){a.fill(12);return a}},Intl,Date,console,setTimeout,clearTimeout};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('course-details.js','utf8'), context);
 vm.runInContext(fs.readFileSync('quizzes.js','utf8'), context);
 vm.runInContext(fs.readFileSync('projects.js','utf8'), context);
+vm.runInContext(fs.readFileSync('challenges.js','utf8'), context);
 vm.runInContext(fs.readFileSync('app.js','utf8'), context);
 vm.runInContext(fs.readFileSync('backup.js','utf8'), context);
 assert.equal(vm.runInContext('courses.length',context),10);
 assert.equal((el('courseGrid').innerHTML.match(/class="course-card"/g)||[]).length,10);
 assert.equal(vm.runInContext('courses.every(c => courseProjects[c.id].tasks.length >= 4)',context),true);
-assert.equal(vm.runInContext('courses.every(c => quizzes[c.id].length === 3 && quizFor(c).every(q => q.answer >= 0 && q.answer < q.options.length))',context),true);
+assert.equal(vm.runInContext('courses.every(c => quizzes[c.id].length === 8 && quizFor(c).every(q => q.answer >= 0 && q.answer < q.options.length))',context),true);
 assert.equal(vm.runInContext('courses.every(c => c.lessons.length >= 3 && courseDetails[c.id] && c.lessons.every(l => l.title && l.text && l.code && l.practice))',context),true);
 filters[2].fn();
 assert.equal((el('courseGrid').innerHTML.match(/class="course-card"/g)||[]).length,2);
@@ -45,8 +47,13 @@ assert.equal(store.get('sayanox-project-python'),'[0]');
 vm.runInContext("currentView='quiz'; renderDialog()",context);
 assert(el('dialogContent').innerHTML.includes('id="quizForm"'));
 el('dialogContent').onsubmit({target:{id:'quizForm'},preventDefault(){}});
-assert.equal(JSON.parse(store.get('sayanox-quiz-scores')).python,2);
+assert.equal(JSON.parse(store.get('sayanox-quiz-scores')).python,4);
 assert(el('dialogContent').innerHTML.includes('quiz-explanation'));
+el('dialogContent').onclick({target:{closest(sel){return sel==='[data-action]'?{dataset:{action:'retry-wrong'}}:null}}});
+assert.equal(vm.runInContext('quizRetryAnswers.filter(v => v !== null).length',context),4);
+fakeAnswers = vm.runInContext('quizFor(currentCourse).map(q => String(q.answer))',context);
+el('dialogContent').onsubmit({target:{id:'quizForm'},preventDefault(){}});
+assert.equal(JSON.parse(store.get('sayanox-quiz-scores')).python,8);
 vm.runInContext("currentView='lesson'; renderDialog()",context);
 for (let i=0;i<5;i++) {
   vm.runInContext(`currentLesson=${i}`,context);
@@ -56,14 +63,17 @@ vm.runInContext("currentView='certificate'; renderDialog()",context);
 assert(el('dialogContent').innerHTML.includes('id="certificateForm"'));
 vm.runInContext("printCertificate('<Student>', currentCourse)",context);
 assert(printed);
-assert(el('printArea').innerHTML.includes('&lt;Student&gt;'));
+assert(!el('printArea').innerHTML.includes('<Student>'));
+assert(vm.runInContext("textSlots.includes('<Student>')", context));
 assert(el('printArea').innerHTML.includes('Sayan Mahata'));
 assert(el('printArea').innerHTML.includes('not independently verified'));
+assert.equal(JSON.parse(store.get('sayanox-certificates-v1'))[0].id, 'SU-' + '0C'.repeat(16));
 // Backup validates known keys and restores only application-owned data.
 store.set('unrelated-app-key','keep');
 const backup = vm.runInContext('collectBackup()', context);
 assert.equal(backup.data['sayanox-notes-python-0'], 'My notes');
 assert.equal(backup.data['sayanox-project-python'], '[0]');
+assert(JSON.parse(backup.data['sayanox-certificates-v1'])[0].id.startsWith('SU-'));
 assert.equal(backup.data['unrelated-app-key'], undefined);
 context.savedBackup = backup;
 vm.runInContext('validateBackup(savedBackup)',context);
@@ -73,6 +83,31 @@ store.set('sayanox-notes-python-0','Changed');
 vm.runInContext('restoreBackup(savedBackup.data)',context);
 assert.equal(store.get('sayanox-notes-python-0'),'My notes');
 assert.equal(store.get('unrelated-app-key'),'keep');
+// A failed import write must restore the pre-import state when storage recovers.
+store.set('sayanox-notes-python-0','before failed import');
+let failOnce = true;
+const normalSet = context.localStorage.setItem;
+context.localStorage.setItem = (key,value) => { if (failOnce && key === 'sayanox-notes-python-0') { failOnce = false; throw Error('quota'); } normalSet(key,value); };
+assert.throws(() => vm.runInContext('restoreBackup(savedBackup.data)', context), /previous data was restored/);
+assert.equal(store.get('sayanox-notes-python-0'), 'before failed import');
+context.localStorage.setItem = normalSet;
+// The disposable worker is terminated when the run timeout expires.
+let timeoutHandler, fakeWorker;
+context.setTimeout = (fn, ms) => { assert.equal(ms,45000); timeoutHandler = fn; return 9; };
+context.clearTimeout = () => {};
+context.Worker = class { constructor(){ fakeWorker=this; this.terminated=false; } postMessage(data){this.data=data;} terminate(){this.terminated=true;} };
+vm.runInContext("currentCourse = courses[0]; currentView = 'lesson'; currentLesson = 0", context);
+el('practiceEditor').value = 'print(42)';
+vm.runInContext('runCode()',context);
+assert.equal(fakeWorker.data.mode,'python'); timeoutHandler();
+assert(fakeWorker.terminated); assert.match(el('studioOutput').textContent,/timed out/);
+// Static fallback and offline precache cover every course and every local asset.
+const html = fs.readFileSync('index.html','utf8'), staticCourses = fs.readFileSync('courses.html','utf8');
+assert.match(html, /<noscript>/);
+for (const id of vm.runInContext('courses.map(c => c.id)',context)) { assert(html.includes(`courses.html#${id}`)); assert(staticCourses.includes(`id="${id}"`)); }
+const swContext = {self:{addEventListener(){}}}; vm.createContext(swContext); vm.runInContext(fs.readFileSync('sw.js','utf8'),swContext);
+for (const item of vm.runInContext('FILES',swContext)) assert(fs.existsSync(item), `Missing precache asset: ${item}`);
+assert(!fs.readFileSync('runner-worker.js','utf8').includes('cdnjs.cloudflare.com'));
 // Exercise actual JavaScript worker execution and error reporting without network dependencies.
 (async () => {
   const messages = [];
@@ -81,6 +116,8 @@ assert.equal(store.get('unrelated-app-key'),'keep');
   vm.runInContext(fs.readFileSync('runner-worker.js','utf8'), workerContext);
   await workerContext.self.onmessage({data:{mode:'javascript',code:'console.log("Hello", 42)'}});
   assert.equal(messages.pop().output, 'Hello 42');
+  await workerContext.self.onmessage({data:{mode:'javascript',code:'function double(n){return n*2}',challengeTests:'\nif(double(2)!==4) throw Error("wrong"); console.log("passed");'}});
+  assert.match(messages.pop().output, /passed/);
   await workerContext.self.onmessage({data:{mode:'javascript',code:'throw new Error("bad code")'}});
   assert.match(messages.pop().output, /bad code/);
   console.log('Smoke tests passed: classroom, projects, notes, quiz, backup validation, certificate and JS runner.');
