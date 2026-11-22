@@ -51,6 +51,20 @@ const courses = [
   ]}
 ];
 
+// Additional practice extends the original beginner pathways without claiming full mastery.
+courses.find(c => c.id === 'python').lessons.push(
+  {title:'Functions and return values', text:'Functions group reusable behavior. Parameters receive input, and return sends a result back to the caller. Give functions names that describe what they do and test them with different inputs.', code:'def square(number):\n    return number * number\n\nprint(square(5))', practice:'Write a function that converts minutes to seconds. Test it with zero and a positive value.'},
+  {title:'Handling errors', text:'Programs can fail when input is invalid. Use try and except to handle expected exceptions without hiding unrelated problems. ValueError occurs when text cannot be converted to an integer.', code:'try:\n    number = int("42")\n    print(number * 2)\nexcept ValueError:\n    print("Please enter a whole number")', practice:'Change the input to non-numeric text and observe the result.'}
+);
+courses.find(c => c.id === 'rust').lessons.push(
+  {title:'Functions and control flow', text:'Functions use fn and may return a typed value. An if expression can select a value; both branches must have compatible types.', code:'fn double(value: i32) -> i32 {\n    value * 2\n}\n\nfn main() {\n    println!("{}", double(4));\n}', practice:'Write a function that returns the larger of two integers.'},
+  {title:'Recoverable errors', text:'Rust represents recoverable errors with Result<T, E>. Match forces you to consider success and failure explicitly, rather than silently ignoring an error.', code:'fn main() {\n    let parsed = "42".parse::<i32>();\n    match parsed {\n        Ok(n) => println!("{}", n),\n        Err(e) => println!("Invalid number: {}", e),\n    }\n}', practice:'Try parsing a word instead of a number and inspect the error.'}
+);
+courses.find(c => c.id === 'c').lessons.push(
+  {title:'Functions', text:'A function groups instructions behind a name. Its parameter types and return type describe the data it accepts and produces. Functions help reduce duplication.', code:'#include <stdio.h>\nint double_value(int n) {\n    return n * 2;\n}\nint main(void) {\n    printf("%d\\n", double_value(4));\n    return 0;\n}', practice:'Write a function that returns the larger of two integers.'},
+  {title:'Introducing pointers', text:'A pointer stores an address. The & operator gets a variable’s address and * accesses the pointed-to value. Only dereference pointers that refer to valid objects.', code:'#include <stdio.h>\nint main(void) {\n    int value = 10;\n    int *ptr = &value;\n    printf("%d\\n", *ptr);\n    return 0;\n}', practice:'Change the value through the pointer and print the original variable.'}
+);
+
 const grid = document.getElementById('courseGrid');
 const dialog = document.getElementById('courseDialog');
 const dialogContent = document.getElementById('dialogContent');
@@ -58,17 +72,60 @@ let activeFilter = 'all';
 let query = '';
 let currentCourse = null;
 let currentLesson = 0;
+let currentView = 'intro';
+let editorDraft = '';
+let activeWorker = null;
+let runTimer = null;
+let quizResult = null;
+let lastCourse = null;
 let progress = {};
+let quizScores = {};
+let bookmarks = {};
+let projectMemory = {};
+let storageAvailable = true;
+try { lastCourse = localStorage.getItem('sayanox-last-course'); quizScores = JSON.parse(localStorage.getItem('sayanox-quiz-scores') || '{}') || {}; bookmarks = JSON.parse(localStorage.getItem('sayanox-bookmarks') || '{}') || {}; } catch { storageAvailable = false; }
 try { progress = JSON.parse(localStorage.getItem('sayanox-progress-v1') || '{}') || {}; } catch { progress = {}; }
 
-function saveProgress() { try { localStorage.setItem('sayanox-progress-v1', JSON.stringify(progress)); } catch {} }
+function saveProgress() { try { localStorage.setItem('sayanox-progress-v1', JSON.stringify(progress)); return true; } catch { storageAvailable = false; return false; } }
+function readStored(key) { try { return localStorage.getItem(key); } catch { storageAvailable = false; return null; } }
+function writeStored(key, value) { try { localStorage.setItem(key, value); return true; } catch { storageAvailable = false; return false; } }
+function lessonKey(type, course = currentCourse, index = currentLesson) { return `sayanox-${type}-${course.id}-${index}`; }
+function projectDone(course) { if (Array.isArray(projectMemory[course.id])) return [...projectMemory[course.id]]; try { const value = JSON.parse(readStored(`sayanox-project-${course.id}`) || '[]'); return Array.isArray(value) ? [...new Set(value.filter(i => Number.isInteger(i) && i >= 0 && i < courseProjects[course.id].tasks.length))] : []; } catch { return []; } }
+function lessonDraft(course, index) { const saved = readStored(lessonKey('draft', course, index)); return saved === null ? defaultCode(course, index) : saved; }
+function quizFor(course) { return quizzes[course.id].map((item, i) => { const shift = i % item.options.length; return {...item, options: [...item.options.slice(shift), ...item.options.slice(0, shift)], answer: (item.answer - shift + item.options.length) % item.options.length}; }); }
+function renderDashboard() {
+  const dashboard = document.getElementById('learningDashboard');
+  const last = courses.find(c => c.id === lastCourse);
+  const completedCount = courses.reduce((sum, c) => sum + doneFor(c).length, 0);
+  dashboard.hidden = !last && !completedCount;
+  dashboard.innerHTML = `<div><span class="dashboard-icon">✳</span><div><strong>Your learning journey</strong><small>${completedCount} lesson${completedCount === 1 ? '' : 's'} completed across ${courses.length} courses · ${storageAvailable ? 'saved in this browser' : 'available for this session only'}</small></div></div>${last ? `<button data-resume="${last.id}">Continue ${escapeHtml(last.title)} ↗</button>` : ''}`;
+}
+function renderSavedLessons() {
+  const panel = document.getElementById('savedLessons');
+  const saved = courses.flatMap(course => course.lessons.map((lesson, index) => ({course, lesson, index})).filter(({index}) => bookmarks[lessonKey('bookmark', course, index)]));
+  panel.hidden = saved.length === 0;
+  panel.innerHTML = `<div class="saved-heading"><div><span>REVISIT &amp; REVIEW</span><strong>Saved lessons</strong></div><small>${saved.length} saved</small></div><div class="saved-list">${saved.map(({course, lesson, index}) => `<button data-revisit-course="${course.id}" data-revisit-lesson="${index}"><span>${escapeHtml(course.title)}</span><strong>${escapeHtml(lesson.title)}</strong><i>↗</i></button>`).join('')}</div>`;
+}
 function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function doneFor(course) { return Array.isArray(progress[course.id]) ? [...new Set(progress[course.id].filter(i => Number.isInteger(i) && i >= 0 && i < course.lessons.length))] : []; }
 function renderCourses() {
   const filtered = courses.filter(c => (activeFilter === 'all' || c.category === activeFilter) && `${c.title} ${c.categoryLabel} ${c.description}`.toLowerCase().includes(query));
   document.getElementById('courseCount').textContent = String(courses.length).padStart(2,'0');
   document.getElementById('emptyState').hidden = filtered.length > 0;
+  renderDashboard();
+  renderSavedLessons();
   grid.innerHTML = filtered.map(c => `<article class="course-card"><button class="card-button" data-course="${c.id}" aria-label="Open ${escapeHtml(c.title)} course"><div class="card-art ${c.art}"><span class="card-art-label">SAYANOX / LEARN</span><span class="card-art-icon">${escapeHtml(c.icon)}</span><span class="card-orbit">✳ &nbsp; 100% FREE</span></div><div class="card-content"><div class="card-tags"><span class="tag">${c.categoryLabel}</span><span>BEGINNER</span></div><h3>${escapeHtml(c.title)}</h3><p>${escapeHtml(c.description)}</p><div class="card-meta"><span>▤ &nbsp; ${c.lessons.length} lessons</span><span>✳ &nbsp; Free certificate</span><span>${doneFor(c).length ? `${doneFor(c).length}/${c.lessons.length} complete` : 'Start course ↗'}</span></div></div></button></article>`).join('');
+}
+function stopRunner() {
+  if (activeWorker) activeWorker.terminate();
+  activeWorker = null;
+  if (runTimer) clearTimeout(runTimer);
+  runTimer = null;
+}
+function defaultCode(course, index) {
+  const code = course.lessons[index].code;
+  if (course.id === 'web' && !/<(?:body|h1)/i.test(code)) return code + '\n<body>\n  <h1>Hello, web!</h1>\n  <p>Edit this page and run the preview.</p>\n</body>';
+  return code;
 }
 function openCourse(id) {
   currentCourse = courses.find(c => c.id === id);
@@ -76,32 +133,147 @@ function openCourse(id) {
   const done = doneFor(currentCourse);
   currentLesson = currentCourse.lessons.findIndex((_, i) => !done.includes(i));
   if (currentLesson < 0) currentLesson = 0;
+  currentView = 'intro';
+  quizResult = null;
+  lastCourse = currentCourse.id;
+  writeStored('sayanox-last-course', lastCourse);
+  editorDraft = lessonDraft(currentCourse, currentLesson);
+  renderDashboard();
   renderDialog();
   if (!dialog.open) dialog.showModal();
 }
 function renderDialog() {
-  const c = currentCourse, lesson = c.lessons[currentLesson], done = doneFor(c), completed = done.length === c.lessons.length;
-  dialogContent.innerHTML = `<div class="dialog-header"><div><small>${c.categoryLabel} &nbsp; / &nbsp; BEGINNER</small><h2>${escapeHtml(c.title)}</h2></div><button class="close-dialog" aria-label="Close">×</button></div><div class="dialog-body"><div class="progress-row"><span>Your progress</span><strong>${done.length} / ${c.lessons.length} lessons complete</strong></div><div class="progress-track"><div class="progress-fill" style="width:${done.length / c.lessons.length * 100}%"></div></div><div class="lesson-tabs">${c.lessons.map((l,i) => `<button class="lesson-tab ${i===currentLesson?'active':''}" data-lesson="${i}">${done.includes(i)?'✓':'○'} &nbsp; Lesson ${i+1}</button>`).join('')}</div><article class="lesson-content"><h3>${escapeHtml(lesson.title)}</h3><p>${escapeHtml(lesson.text)}</p><pre><code>${escapeHtml(lesson.code)}</code></pre><p class="practice"><strong>Practice:</strong> ${escapeHtml(lesson.practice)}</p></article><div class="dialog-actions"><button class="secondary-button" data-action="previous" ${currentLesson === 0 ? 'disabled' : ''}>← Previous lesson</button><button class="button button-dark" data-action="complete">${done.includes(currentLesson) ? 'Completed ✓' : 'Mark lesson complete ✓'}</button><button class="secondary-button" data-action="next" ${currentLesson === c.lessons.length-1 ? 'disabled' : ''}>Next lesson →</button></div><div class="certificate-form"><h3>✳ &nbsp; Your certificate</h3>${completed ? `<p>Well done! You have completed every lesson. Enter your name as you would like it to appear on your certificate.</p><form id="certificateForm"><div class="form-row"><input name="studentName" type="text" maxlength="80" required placeholder="Your full name" aria-label="Your full name for the certificate"><button class="button button-dark" type="submit">Create certificate ↗</button></div></form><p class="form-note">Choose “Save as PDF” in the print dialog to save a copy. This is a self-reported completion keepsake, not an exam-based or independently verified credential.</p>` : `<p>Read, practice and complete every lesson to create a certificate in your name. Your progress is saved in this browser.</p>`}</div></div>`;
+  stopRunner();
+  const c = currentCourse, detail = courseDetails[c.id], lesson = c.lessons[currentLesson];
+  const done = doneFor(c), completed = done.length === c.lessons.length;
+  const title = currentView === 'intro' ? 'Course overview' : currentView === 'certificate' ? 'Your certificate' : currentView === 'quiz' ? 'Knowledge check' : currentView === 'project' ? 'Guided project' : lesson.title;
+  const mode = detail.mode === 'javascript' && /^\s*</.test(editorDraft) ? 'html-script' : detail.mode;
+  const canRun = ['python', 'sql', 'javascript', 'html', 'html-script'].includes(mode);
+  let content;
+  if (currentView === 'intro') {
+    content = `<div class="course-kicker">WELCOME TO YOUR COURSE</div><h1>${escapeHtml(c.title)}</h1><p class="course-lead">${escapeHtml(detail.overview)}</p><div class="course-info-grid"><div><span>LEVEL</span><strong>Beginner</strong></div><div><span>CURRICULUM</span><strong>${c.lessons.length} introductory lessons</strong></div><div><span>LEARN AT</span><strong>Your own pace</strong></div></div><section class="learn-panel"><h2>What you'll learn</h2><ul>${detail.outcomes.map(outcome => `<li><span>✓</span>${escapeHtml(outcome)}</li>`).join('')}</ul></section><section class="origin-panel"><div class="origin-icon">✳</div><div><h2>The story behind ${escapeHtml(detail.subject)}</h2><p>${escapeHtml(detail.created)}</p><p>This course is an introductory learning resource from Sayanox University, owned by Sayan Mahata. It is not a complete or accredited qualification.</p></div></section><button class="button button-dark start-lesson" data-view="lesson" data-lesson="${currentLesson}">Start learning <span>→</span></button>`;
+  } else if (currentView === 'project') {
+    const project = courseProjects[c.id], finished = projectDone(c);
+    content = `<div class="course-kicker">${escapeHtml(project.level)} &nbsp; / &nbsp; GUIDED PROJECT</div><h1>${escapeHtml(project.title)}</h1><p class="course-lead">${escapeHtml(project.brief)}</p><div class="project-progress"><div><span>YOUR PROJECT CHECKLIST</span><strong id="projectCount">${finished.length} / ${project.tasks.length} steps</strong></div><div class="progress-track"><div id="projectProgress" class="progress-fill" style="width:${finished.length / project.tasks.length * 100}%"></div></div><small id="projectStatus" role="status">Self-tracked progress · saved in this browser when available</small></div><section class="project-section"><h2>What you'll practice</h2><ul class="project-outcomes">${project.outcomes.map(outcome => `<li>✓ &nbsp; ${escapeHtml(outcome)}</li>`).join('')}</ul></section><section class="project-section"><div class="section-line"><h2>Build it step by step</h2><span>CHECK AS YOU GO</span></div><p>Use the practice studio or the recommended external tool. Your checklist is self-reported and does not submit or evaluate your work.</p><div class="project-tasks">${project.tasks.map((task, i) => `<label class="project-task"><input type="checkbox" data-project-task="${i}" ${finished.includes(i) ? 'checked' : ''}><span><small>STEP ${String(i+1).padStart(2,'0')}</small>${escapeHtml(task)}</span></label>`).join('')}</div></section><section class="project-review"><span>SELF-REVIEW</span><h2>Before you finish</h2><ul>${project.review.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section class="project-stretch"><span>✦</span><div><strong>Go further</strong><p>${escapeHtml(project.stretch)}</p></div></section><p class="completion-note">This is a self-guided project; no automated code review, instructor feedback or certificate verification is provided.</p>`;
+  } else if (currentView === 'quiz') {
+    const questions = quizFor(c);
+    const best = Number.isInteger(quizScores[c.id]) ? quizScores[c.id] : null;
+    content = `<div class="course-kicker">CHECK YOUR UNDERSTANDING</div><h1>Knowledge check</h1><p class="course-lead">Put the concepts into practice with ${questions.length} short questions. You can retry as often as you like. This optional check does not determine certificate eligibility.</p>${best !== null ? `<div class="quiz-best">✳ &nbsp; Best score in this browser: <strong>${best} / ${questions.length}</strong></div>` : ''}${quizResult ? `<div class="quiz-result" role="status"><span>YOUR RESULT</span><strong>${quizResult.score} / ${questions.length}</strong><p>${quizResult.score === questions.length ? 'Excellent work! Review the explanations to reinforce what you learned.' : 'Keep going! Review the explanations and try again.'}</p></div>` : ''}<form id="quizForm" class="quiz-form">${questions.map((item, i) => `<fieldset class="quiz-question"><legend><span>${String(i + 1).padStart(2, '0')}</span> ${escapeHtml(item.q)}</legend>${item.options.map((option, j) => `<label class="quiz-option"><input type="radio" name="question${i}" value="${j}" required ${quizResult && quizResult.answers[i] === j ? 'checked' : ''}><span>${escapeHtml(option)}</span></label>`).join('')}${quizResult ? `<div class="quiz-explanation ${quizResult.answers[i] === item.answer ? 'correct' : ''}"><strong>${quizResult.answers[i] === item.answer ? 'Correct' : `Correct answer: ${escapeHtml(item.options[item.answer])}`}</strong> — ${escapeHtml(item.explanation)}</div>` : ''}</fieldset>`).join('')}<button class="button button-dark" type="submit">${quizResult ? 'Check answers again ↗' : 'Check my answers ↗'}</button>${quizResult ? '<button class="secondary-button" type="button" data-action="retry-quiz">Start over</button>' : ''}</form>`;
+  } else if (currentView === 'certificate') {
+    content = `<div class="course-kicker">CELEBRATE YOUR PROGRESS</div><h1>Your certificate</h1><p class="course-lead">Your effort deserves to be celebrated. Complete each lesson to create a personalized certificate of completion.</p><div class="certificate-form course-certificate"><h3>✳ &nbsp; Certificate of completion</h3>${completed ? `<p>Congratulations! Enter the name you want to appear on your certificate.</p><form id="certificateForm"><div class="form-row"><input name="studentName" maxlength="80" required placeholder="Your full name" aria-label="Your full name for the certificate"><button class="button button-dark" type="submit">Create certificate ↗</button></div></form><p class="form-note">Choose “Save as PDF” in your print dialog. This is a self-reported completion keepsake, not an exam-based or independently verified credential.</p>` : `<p>Complete ${c.lessons.length - done.length} more lesson${c.lessons.length - done.length === 1 ? '' : 's'} to unlock your certificate. Your progress is stored in this browser.</p><button class="secondary-button" data-view="lesson" data-lesson="${currentLesson}">Continue learning →</button>`}</div>`;
+  } else {
+    content = `<div class="lesson-heading-row"><div class="course-kicker">LESSON ${String(currentLesson + 1).padStart(2, '0')} / ${String(c.lessons.length).padStart(2, '0')}</div><button class="bookmark-button" data-action="bookmark" aria-pressed="${Boolean(bookmarks[lessonKey('bookmark')])}">${bookmarks[lessonKey('bookmark')] ? '★ Saved' : '☆ Save lesson'}</button></div><h1>${escapeHtml(title)}</h1><p class="course-lead">${escapeHtml(lesson.text)}</p><section class="learn-panel"><div class="section-line"><h2>Example</h2><span>READ &amp; EXPLORE</span></div><p>Read through this example, then edit it in the practice workspace.</p><pre><code>${escapeHtml(lesson.code)}</code></pre></section><section class="challenge-panel"><div class="challenge-icon">✦</div><div><span>YOUR TURN</span><h2>Practice challenge</h2><p>${escapeHtml(lesson.practice)}</p></div></section><section class="notes-panel"><div><h2>My lesson notes</h2><span id="notesStatus" aria-live="polite">Stored on this device when available</span></div><label class="sr-only" for="lessonNotes">Notes for this lesson</label><textarea id="lessonNotes" maxlength="20000" placeholder="Write down what you learned, questions, or ideas to revisit…">${escapeHtml(readStored(lessonKey('notes')) || '')}</textarea><p>Your notes are private to this browser and may be lost if site data is cleared.</p></section><div class="lesson-actions"><button class="secondary-button" data-action="previous" ${currentLesson === 0 ? 'disabled' : ''}>← Previous</button><button class="button button-dark" data-action="complete">${done.includes(currentLesson) ? 'Completed ✓' : 'Mark as complete ✓'}</button><button class="secondary-button" data-action="next" ${currentLesson === c.lessons.length-1 ? 'disabled' : ''}>Next lesson →</button></div><p class="completion-note">Mark a lesson complete after reading and practicing. Completion is self-reported.</p>`;
+  }
+  dialogContent.innerHTML = `<header class="classroom-top"><button class="classroom-back close-dialog">← <span>All courses</span></button><div class="classroom-brand"><span>✳</span> SAYANOX <small>UNIVERSITY</small></div><div class="classroom-top-right"><button class="focus-toggle" data-action="focus" aria-pressed="${dialog.classList.contains('focus-mode')}">◐ Focus mode</button><button class="close-dialog classroom-close" aria-label="Close course">×</button></div></header><div class="classroom-layout"><aside class="classroom-sidebar"><div class="sidebar-course"><span class="sidebar-label">YOUR LEARNING SPACE</span><h2>${escapeHtml(c.title)}</h2><div class="sidebar-progress"><span>Course progress</span><strong>${Math.round(done.length / c.lessons.length * 100)}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${done.length / c.lessons.length * 100}%"></div></div><small>${done.length} of ${c.lessons.length} lessons completed</small>${storageAvailable ? '' : '<p class="storage-warning" role="status">Browser storage is unavailable. Changes may be lost when you leave.</p>'}</div><nav class="curriculum-nav" aria-label="Course navigation"><button data-view="intro" class="curriculum-link ${currentView === 'intro' ? 'selected' : ''}"><span>◈</span> Course overview</button><div class="curriculum-heading">COURSE CONTENT <span>${c.lessons.length} LESSONS</span></div>${c.lessons.map((l,i) => `<button data-view="lesson" data-lesson="${i}" class="curriculum-link ${currentView === 'lesson' && i === currentLesson ? 'selected' : ''}"><span class="lesson-indicator ${done.includes(i) ? 'done' : ''}">${done.includes(i) ? '✓' : String(i+1).padStart(2,'0')}</span><span>${escapeHtml(l.title)}</span>${bookmarks[lessonKey('bookmark', c, i)] ? '<span class="bookmark-mark" aria-label="Saved lesson">★</span>' : ''}</button>`).join('')}<button data-view="project" class="curriculum-link ${currentView === 'project' ? 'selected' : ''}"><span>▧</span> Guided project <span class="lock-status">${projectDone(c).length}/${courseProjects[c.id].tasks.length}</span></button><button data-view="quiz" class="curriculum-link ${currentView === 'quiz' ? 'selected' : ''}"><span>◇</span> Knowledge check <span class="lock-status">${Number.isInteger(quizScores[c.id]) ? `${quizScores[c.id]}/${quizzes[c.id].length}` : ''}</span></button><button data-view="certificate" class="curriculum-link cert-link ${currentView === 'certificate' ? 'selected' : ''}"><span>✳</span> Your certificate <span class="lock-status">${completed ? '✓' : '○'}</span></button></nav><button class="reset-progress" data-action="reset-progress">Reset course progress</button><div class="sidebar-help">LEARN WITH PURPOSE<br><span>Small steps. Real progress.</span></div></aside><main class="classroom-content"><div class="content-wrap"><div class="breadcrumb">COURSES <span>/</span> ${escapeHtml(c.title.toUpperCase())} <span>/</span> ${escapeHtml(title.toUpperCase())}</div>${content}<div class="content-footer"><span>SAYANOX UNIVERSITY</span><a href="${detail.resource}" target="_blank" rel="noopener noreferrer">${escapeHtml(detail.resourceLabel)} ↗</a></div></div></main><aside class="studio"><div class="studio-header"><div><span>YOUR PRACTICE SPACE</span><h2>Practice studio <i>✳</i></h2></div><span class="studio-live">● READY</span></div><p class="studio-description">${escapeHtml(detail.environment)}</p><div class="editor-window"><div class="editor-bar"><span>● &nbsp; ${escapeHtml(detail.subject)}</span><div class="editor-controls"><button data-action="copy-code" title="Copy code">Copy</button><button data-action="reset" title="Reset code">Reset ↺</button></div></div><label class="sr-only" for="practiceEditor">Practice editor</label><textarea id="practiceEditor" spellcheck="false" maxlength="20000" aria-label="Practice editor">${escapeHtml(editorDraft)}</textarea><div class="editor-bottom"><span>${escapeHtml(canRun ? 'CTRL / ⌘ + ENTER TO RUN' : 'SCRATCHPAD')}</span>${canRun ? '<button data-action="run" class="run-button">▶ Run code</button>' : `<a class="run-button" href="${detail.resource}" target="_blank" rel="noopener noreferrer">Open resource ↗</a>`}</div></div><div class="output-window"><div class="output-header"><span>⌘ &nbsp; OUTPUT</span><button data-action="clear-output">Clear</button></div><pre id="studioOutput" aria-live="polite">${canRun ? 'Your output will appear here after you run your code.' : 'Use this space to write and edit. This course requires an external tool or local environment to run code.'}</pre><iframe id="previewFrame" title="Sandboxed code preview" sandbox="allow-scripts" hidden></iframe></div><p class="editor-save-status" id="draftStatus" aria-live="polite">Drafts are stored in this browser when available</p><div class="studio-tip"><span>✧</span><p><strong>Learn by doing.</strong><br>Experiment, make mistakes and try again. That’s how skills grow.</p></div><a class="studio-resource" href="${detail.resource}" target="_blank" rel="noopener noreferrer">${escapeHtml(detail.resourceLabel)} ↗</a></aside></div>`;
+}
+function runCode() {
+  const editor = document.getElementById('practiceEditor');
+  const output = document.getElementById('studioOutput');
+  const frame = document.getElementById('previewFrame');
+  editorDraft = editor.value;
+  stopRunner();
+  let mode = courseDetails[currentCourse.id].mode;
+  if (mode === 'javascript' && /^\s*</.test(editorDraft)) mode = 'html-script';
+  if (mode === 'html' || mode === 'html-script') {
+    const scripts = mode === 'html-script' ? "'unsafe-inline'" : "'none'";
+    frame.hidden = false;
+    frame.srcdoc = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src ${scripts}; form-action 'none'; base-uri 'none'">${editorDraft}`;
+    output.textContent = 'Preview rendered in a sandbox below.';
+    return;
+  }
+  frame.hidden = true;
+  output.textContent = 'Starting runtime…';
+  try {
+    const worker = new Worker('runner-worker.js');
+    activeWorker = worker;
+    runTimer = setTimeout(() => { if (activeWorker === worker) { stopRunner(); output.textContent = 'Execution timed out. Check for an infinite loop or a slow runtime download, then try again.'; } }, 45000);
+    worker.onmessage = ({data}) => {
+      if (worker !== activeWorker) return;
+      if (data.status) output.textContent = data.status;
+      if (typeof data.output === 'string') { output.textContent = data.output; stopRunner(); }
+    };
+    worker.onerror = () => { if (worker === activeWorker) { output.textContent = 'Unable to start the runtime. Check your connection and try again.'; stopRunner(); } };
+    worker.postMessage({mode, code:editorDraft, seed:currentCourse.id === 'sql' && currentLesson > 0});
+  } catch { output.textContent = 'Your browser could not start the practice runtime.'; }
 }
 function printCertificate(name, course) {
   const date = new Intl.DateTimeFormat('en-GB', {day:'numeric',month:'long',year:'numeric'}).format(new Date());
   document.getElementById('printArea').innerHTML = `<div class="print-certificate"><div class="print-brand">✳ &nbsp; SAYANOX UNIVERSITY</div><h1>Certificate of Completion</h1><h2>Celebrating your learning journey</h2><p>This certificate is proudly presented to</p><div class="print-name">${escapeHtml(name)}</div><p>for completing the self-paced course</p><h2>${escapeHtml(course.title)}</h2><p>Completed on ${date}</p><p><small>Self-reported completion; not independently verified.</small></p><div class="print-signatures"><div>${escapeHtml(name)}<small>STUDENT</small></div><div>Sayan Mahata<small>OWNER, SAYANOX</small></div></div></div>`;
   window.print();
 }
+document.getElementById('savedLessons').addEventListener('click', e => { const button = e.target.closest('[data-revisit-course]'); if (!button) return; openCourse(button.dataset.revisitCourse); currentLesson = Number(button.dataset.revisitLesson); currentView = 'lesson'; editorDraft = lessonDraft(currentCourse, currentLesson); renderDialog(); });
+document.getElementById('learningDashboard').addEventListener('click', e => { const button = e.target.closest('[data-resume]'); if (button) openCourse(button.dataset.resume); });
 grid.addEventListener('click', e => { const button = e.target.closest('[data-course]'); if(button) openCourse(button.dataset.course); });
 document.querySelectorAll('.filter').forEach(button => button.addEventListener('click', () => { activeFilter = button.dataset.filter; document.querySelectorAll('.filter').forEach(b => b.classList.toggle('active', b === button)); renderCourses(); }));
 document.getElementById('searchInput').addEventListener('input', e => { query = e.target.value.trim().toLowerCase(); renderCourses(); });
-dialogContent.addEventListener('click', e => {
-  if (e.target.closest('.close-dialog')) { dialog.close(); return; }
-  const tab = e.target.closest('[data-lesson]');
-  if (tab) { currentLesson = Number(tab.dataset.lesson); renderDialog(); return; }
-  const action = e.target.closest('[data-action]')?.dataset.action;
-  if (action === 'previous' && currentLesson > 0) currentLesson--;
-  if (action === 'next' && currentLesson < currentCourse.lessons.length-1) currentLesson++;
-  if (action === 'complete') { const done = doneFor(currentCourse); if (!done.includes(currentLesson)) done.push(currentLesson); progress[currentCourse.id] = done; saveProgress(); renderCourses(); }
-  if (action) renderDialog();
+dialogContent.addEventListener('input', e => {
+  if (e.target.id === 'practiceEditor') { editorDraft = e.target.value; const ok = writeStored(lessonKey('draft'), editorDraft); document.getElementById('draftStatus').textContent = ok ? 'Draft saved in this browser' : 'Draft could not be saved on this device'; }
+  if (e.target.id === 'lessonNotes') { const ok = writeStored(lessonKey('notes'), e.target.value); document.getElementById('notesStatus').textContent = ok ? 'Saved on this device' : 'Could not save on this device'; }
 });
-dialogContent.addEventListener('submit', e => { if (e.target.id !== 'certificateForm') return; e.preventDefault(); const input = e.target.elements.studentName; const name = input.value.trim(); if (!name) { input.setCustomValidity('Please enter your name.'); input.reportValidity(); input.addEventListener('input', () => input.setCustomValidity(''), {once:true}); return; } if (doneFor(currentCourse).length === currentCourse.lessons.length) printCertificate(name, currentCourse); });
+dialogContent.addEventListener('change', e => {
+  if (!e.target.matches('[data-project-task]') || !currentCourse) return;
+  const task = Number(e.target.dataset.projectTask), done = projectDone(currentCourse);
+  if (!Number.isInteger(task) || task < 0 || task >= courseProjects[currentCourse.id].tasks.length) return;
+  const next = e.target.checked ? [...new Set([...done, task])] : done.filter(i => i !== task);
+  projectMemory[currentCourse.id] = next;
+  const saved = writeStored(`sayanox-project-${currentCourse.id}`, JSON.stringify(next));
+  const total = courseProjects[currentCourse.id].tasks.length;
+  document.getElementById('projectCount').textContent = `${next.length} / ${total} steps`;
+  document.getElementById('projectProgress').style.width = `${next.length / total * 100}%`;
+  document.getElementById('projectStatus').textContent = saved ? 'Self-tracked progress · saved in this browser' : 'Could not save progress on this device';
+  const navCount = dialogContent.querySelector('[data-view="project"] .lock-status');
+  if (navCount) navCount.textContent = `${next.length}/${total}`;
+});
+dialogContent.addEventListener('keydown', e => {
+  if (e.target.id !== 'practiceEditor') return;
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { const runButton = dialogContent.querySelector('[data-action="run"]'); if (runButton) { e.preventDefault(); runCode(); } }
+});
+dialogContent.addEventListener('click', e => {
+  if (e.target.closest('.close-dialog')) { stopRunner(); dialog.close(); return; }
+  const viewButton = e.target.closest('[data-view]');
+  if (viewButton) {
+    stopRunner();
+    currentView = viewButton.dataset.view;
+    if (currentView === 'lesson') { currentLesson = Number(viewButton.dataset.lesson); editorDraft = lessonDraft(currentCourse, currentLesson); }
+    renderDialog(); return;
+  }
+  const action = e.target.closest('[data-action]')?.dataset.action;
+  if (!action) return;
+  if (action === 'run') { runCode(); return; }
+  if (action === 'focus') { const on = dialog.classList.toggle('focus-mode'); e.target.closest('[data-action="focus"]').setAttribute('aria-pressed', String(on)); return; }
+  if (action === 'bookmark') { const key = lessonKey('bookmark'); if (bookmarks[key]) delete bookmarks[key]; else bookmarks[key] = true; writeStored('sayanox-bookmarks', JSON.stringify(bookmarks)); renderSavedLessons(); renderDialog(); return; }
+  if (action === 'retry-quiz') { quizResult = null; renderDialog(); return; }
+  if (action === 'reset-progress') { if (window.confirm('Reset lesson completion and quiz score for this course? Your notes and code drafts will be kept.')) { delete progress[currentCourse.id]; delete quizScores[currentCourse.id]; quizResult = null; saveProgress(); writeStored('sayanox-quiz-scores', JSON.stringify(quizScores)); renderCourses(); renderDialog(); } return; }
+  if (action === 'copy-code') { const status = document.getElementById('draftStatus'); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(document.getElementById('practiceEditor').value).then(() => { status.textContent = 'Code copied to clipboard'; }).catch(() => { status.textContent = 'Could not copy. Select the code and copy it manually.'; }); else status.textContent = 'Clipboard unavailable. Select the code and copy it manually.'; return; }
+  if (action === 'clear-output') { stopRunner(); document.getElementById('studioOutput').textContent = 'Output cleared.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.srcdoc = ''; return; }
+  if (action === 'reset') { stopRunner(); editorDraft = defaultCode(currentCourse, currentLesson); writeStored(lessonKey('draft'), editorDraft); document.getElementById('practiceEditor').value = editorDraft; document.getElementById('studioOutput').textContent = 'Example restored.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.srcdoc = ''; return; }
+  if (action === 'previous' && currentLesson > 0) { currentLesson--; editorDraft = lessonDraft(currentCourse, currentLesson); }
+  if (action === 'next' && currentLesson < currentCourse.lessons.length-1) { currentLesson++; editorDraft = lessonDraft(currentCourse, currentLesson); }
+  if (action === 'complete') { const done = doneFor(currentCourse); if (!done.includes(currentLesson)) done.push(currentLesson); progress[currentCourse.id] = done; saveProgress(); renderCourses(); }
+  stopRunner(); renderDialog();
+});
+dialog.addEventListener('close', stopRunner);
+dialogContent.addEventListener('submit', e => {
+  if (e.target.id === 'quizForm') {
+    e.preventDefault();
+    const questions = quizFor(currentCourse);
+    const data = new FormData(e.target);
+    const answers = questions.map((_, i) => { const value = data.get(`question${i}`); return value === null ? -1 : Number(value); });
+    if (answers.some((answer, i) => !Number.isInteger(answer) || answer < 0 || answer >= questions[i].options.length)) return;
+    const score = answers.reduce((sum, answer, i) => sum + Number(answer === questions[i].answer), 0);
+    quizResult = {score, answers};
+    quizScores[currentCourse.id] = Math.max(Number.isInteger(quizScores[currentCourse.id]) ? quizScores[currentCourse.id] : 0, score);
+    writeStored('sayanox-quiz-scores', JSON.stringify(quizScores));
+    renderDialog();
+    dialogContent.querySelector('.quiz-result')?.scrollIntoView?.({block:'nearest'});
+    return;
+  }
+  if (e.target.id !== 'certificateForm') return;
+  e.preventDefault();
+  const input = e.target.elements.studentName; const name = input.value.trim();
+  if (!name) { input.setCustomValidity('Please enter your name.'); input.reportValidity(); input.addEventListener('input', () => input.setCustomValidity(''), {once:true}); return; }
+  if (doneFor(currentCourse).length === currentCourse.lessons.length) printCertificate(name, currentCourse);
+});
 dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
 const menu = document.getElementById('menuToggle');
 menu.addEventListener('click', () => { const open = document.getElementById('navLinks').classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); });

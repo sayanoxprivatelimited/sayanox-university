@@ -44,6 +44,9 @@
 
     <section class="courses-section section wrap" id="courses">
       <div class="section-heading"><div><div class="eyebrow dark"><span></span> EXPLORE & LEARN</div><h2>Your next <em>skill</em><br>starts right here.</h2></div><p>Whether you are just starting out or building on what you know, find a course that sparks your curiosity.</p></div>
+      <div id="learningDashboard" class="learning-dashboard" hidden></div>
+      <div id="savedLessons" class="saved-lessons" hidden></div>
+      <div class="data-tools"><div><strong>YOUR LEARNING DATA</strong><span>Back up notes, drafts and progress between browsers. Files are not encrypted.</span></div><div class="data-actions"><button id="exportData" type="button">↓ Export backup</button><button id="importData" type="button">↑ Import backup</button><input id="backupFile" type="file" accept="application/json,.json" hidden></div><p id="backupStatus" aria-live="polite"></p></div>
       <div class="course-toolbar"><div class="filter-tabs" role="group" aria-label="Course categories"><button class="filter active" data-filter="all">All courses <span id="courseCount">06</span></button><button class="filter" data-filter="programming">Programming</button><button class="filter" data-filter="web">Web Development</button><button class="filter" data-filter="fundamentals">Fundamentals</button></div><label class="search"><span>⌕</span><input type="search" id="searchInput" placeholder="Search courses..." aria-label="Search courses"></label></div>
       <div class="course-grid" id="courseGrid"></div><p class="empty-state" id="emptyState" hidden>No courses found. Try a different search or category.</p>
       <div class="course-footnote"><span><span class="mini-star">✳</span> Every small step leads to something bigger.</span><a href="#how-it-works">Discover your learning journey <span>↗</span></a></div>
@@ -59,6 +62,10 @@
 
   <dialog id="courseDialog" class="course-dialog"><div id="dialogContent"></div></dialog>
   <div id="printArea" aria-hidden="true"></div>
+  <script src="course-details.js"></script>
+  <script src="quizzes.js"></script>
+  <script src="projects.js"></script>
   <script src="app.js"></script>
+  <script src="backup.js"></script>
 </body>
 </html>
