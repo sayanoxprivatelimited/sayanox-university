@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#102b28">
+  <meta name="description" content="Learn programming for free at Sayanox University and earn a certificate of completion.">
+  <title>Sayanox University — Learn without limits</title>
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap wrap">
+      <a class="brand" href="#top" aria-label="Sayanox University home"><span class="brand-mark"><span></span><span></span><span></span><span></span></span><span>SAYANOX <small>UNIVERSITY</small></span></a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+      <nav class="nav-links" id="navLinks" aria-label="Main navigation"><a class="active" href="#top">Home</a><a href="#courses">Courses</a><a href="#how-it-works">How it works</a><a href="#certificate">Certificate</a></nav>
+      <a class="nav-cta" href="#courses">Start learning <span>↗</span></a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-grid wrap">
+        <div class="hero-copy">
+          <div class="eyebrow light"><span class="pulse"></span> YOUR JOURNEY STARTS HERE</div>
+          <h1>Learn today.<br><em>Build tomorrow.</em></h1>
+          <p>Curiosity can take you anywhere. Learn Python, Rust, web development and more at your own pace—and celebrate your progress with a free certificate.</p>
+          <div class="hero-actions"><a class="button button-lime" href="#courses">Explore courses <span>↗</span></a><a class="text-link" href="#how-it-works"><span class="play">▶</span> How it works</a></div>
+          <div class="hero-proof"><div class="avatar-stack"><span>S</span><span>U</span><span>✦</span></div><div><strong>Open to everyone</strong><small>Your journey starts today</small></div><span class="proof-divider"></span><div><strong>100% free</strong><small>No hidden costs</small></div></div>
+        </div>
+        <div class="hero-art" aria-label="Illustration of a coding lesson">
+          <div class="cube-scene" aria-hidden="true"><div class="cube"><span class="cube-face cube-front">✳</span><span class="cube-face cube-back"></span><span class="cube-face cube-right"></span><span class="cube-face cube-left"></span><span class="cube-face cube-top"></span><span class="cube-face cube-bottom"></span></div></div><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-spark spark-one">✳</div><div class="art-spark spark-two">✦</div>
+          <div class="code-window"><div class="window-top"><div class="window-dots"><i></i><i></i><i></i></div><span>your_future.py</span><span>⌘</span></div><div class="code-body"><div class="line-numbers">01<br>02<br>03<br>04<br>05<br>06<br>07</div><div class="code-lines"><span class="code-comment"># a little progress, every day</span><br><span class="code-purple">def</span> <span class="code-yellow">your_future</span>():<br>&nbsp;&nbsp;skills = <span class="code-green">"limitless"</span><br>&nbsp;&nbsp;curiosity = <span class="code-orange">True</span><br><br>&nbsp;&nbsp;<span class="code-purple">return</span> <span class="code-green">"anything is possible"</span><br><span class="code-cursor">▍</span></div></div><div class="window-bottom"><span>● &nbsp; Ready to learn</span><span>Python &nbsp; ⌄</span></div></div>
+          <div class="float-card float-top"><span class="float-icon">✦</span><div><strong>New skills unlocked</strong><small>One lesson at a time</small></div></div>
+          <div class="float-card float-bottom"><span class="certificate-icon">✳</span><div><strong>Certificate of completion</strong><small>Made for your journey</small></div><span class="float-check">✓</span></div>
+          <div class="art-caption">LEARN. PRACTICE. GROW. <span>↗</span></div>
+        </div>
+      </div>
+      <div class="hero-bottom wrap"><span>MADE FOR CURIOUS MINDS</span><span class="hero-bottom-right">SCROLL TO EXPLORE <span>↓</span></span></div>
+    </section>
+
+    <section class="value-bar"><div class="wrap value-grid"><div><span class="value-icon">✳</span><p><strong>Completely free</strong><small>No barriers to learning</small></p></div><div><span class="value-icon">◷</span><p><strong>Learn at your own pace</strong><small>Anytime, from anywhere</small></p></div><div><span class="value-icon">♧</span><p><strong>Certificate of completion</strong><small>Celebrate your achievement</small></p></div></div></section>
+
+    <section class="courses-section section wrap" id="courses">
+      <div class="section-heading"><div><div class="eyebrow dark"><span></span> EXPLORE & LEARN</div><h2>Your next <em>skill</em><br>starts right here.</h2></div><p>Whether you are just starting out or building on what you know, find a course that sparks your curiosity.</p></div>
+      <div class="course-toolbar"><div class="filter-tabs" role="group" aria-label="Course categories"><button class="filter active" data-filter="all">All courses <span id="courseCount">06</span></button><button class="filter" data-filter="programming">Programming</button><button class="filter" data-filter="web">Web Development</button><button class="filter" data-filter="fundamentals">Fundamentals</button></div><label class="search"><span>⌕</span><input type="search" id="searchInput" placeholder="Search courses..." aria-label="Search courses"></label></div>
+      <div class="course-grid" id="courseGrid"></div><p class="empty-state" id="emptyState" hidden>No courses found. Try a different search or category.</p>
+      <div class="course-footnote"><span><span class="mini-star">✳</span> Every small step leads to something bigger.</span><a href="#how-it-works">Discover your learning journey <span>↗</span></a></div>
+    </section>
+
+    <section class="journey-section" id="how-it-works"><div class="wrap journey-grid"><div class="journey-intro"><div class="eyebrow dark"><span></span> YOUR LEARNING JOURNEY</div><h2>Learning made<br><em>simple and joyful.</em></h2><p>Big dreams can begin with a single lesson. Start your journey in three simple steps.</p><a class="button button-dark" href="#courses">Start today <span>↗</span></a></div><div class="steps"><div class="step"><span class="step-number">01</span><div><h3>Choose your course</h3><p>Find a topic that interests you and dive right in.</p></div><span class="step-arrow">↗</span></div><div class="step"><span class="step-number">02</span><div><h3>Learn your way</h3><p>Read each lesson, practice with examples and mark your progress.</p></div><span class="step-arrow">↗</span></div><div class="step"><span class="step-number">03</span><div><h3>Get your certificate</h3><p>Complete every lesson to create and print a certificate in your name.</p></div><span class="step-arrow">↗</span></div></div></div></section>
+
+    <section class="certificate-section section wrap" id="certificate"><div class="certificate-preview"><div class="cert-corner top-left"></div><div class="cert-corner bottom-right"></div><div class="cert-brand"><span>✳</span> SAYANOX UNIVERSITY</div><div class="cert-preview-inner"><span class="cert-overline">A LITTLE SOMETHING FOR YOUR HARD WORK</span><h3>Certificate<br><em>of Completion</em></h3><p>This is proudly presented to</p><div class="cert-name">Your Name</div><p>for completing a course at Sayanox University</p><div class="cert-signatures"><div><strong>Student Name</strong><small>STUDENT</small></div><span class="seal">✳</span><div><strong>Sayan Mahata</strong><small>OWNER, SAYANOX</small></div></div></div></div><div class="certificate-copy"><div class="eyebrow dark"><span></span> CELEBRATE YOUR PROGRESS</div><h2>Your hard work<br><em>deserves recognition.</em></h2><p>Every new skill is worth celebrating. Complete all the lessons in a course to create a certificate featuring your name and Sayanox owner Sayan Mahata’s name.</p><ul><li><span>✓</span> A personal certificate with your name</li><li><span>✓</span> Print or save as a PDF for free</li><li><span>✓</span> A keepsake of your learning journey</li></ul><a class="inline-link" href="#courses">Start a course <span>↗</span></a></div></section>
+
+    <section class="closing wrap"><div><div class="eyebrow light"><span class="pulse"></span> READY WHEN YOU ARE</div><h2>Your tomorrow<br><em>starts today.</em></h2><p>Bring your curiosity. We will learn the rest together.</p><a class="button button-lime" href="#courses">Start learning for free <span>↗</span></a></div><div class="closing-art"><span>✳</span><p>LEARN<br>WITHOUT<br>LIMITS<span>.</span></p><small>THE FUTURE IS YOURS TO BUILD ↗</small></div></section>
+  </main>
+  <footer><div class="wrap footer-main"><div><a class="brand footer-brand" href="#top"><span class="brand-mark"><span></span><span></span><span></span><span></span></span><span>SAYANOX <small>UNIVERSITY</small></span></a><p>From curiosity to capability.<br>A place to learn, for everyone.</p></div><div class="footer-links"><div><strong>EXPLORE</strong><a href="#courses">Courses</a><a href="#how-it-works">How it works</a><a href="#certificate">Certificate</a></div><div><strong>OUR PURPOSE</strong><span>Learn for free.</span><span>Build with confidence.</span><span>Keep growing.</span></div></div></div><div class="wrap footer-bottom"><span>© 2026 Sayanox University. Made for learners.</span><span>LEARN SOMETHING NEW TODAY ✳</span></div></footer>
+
+  <dialog id="courseDialog" class="course-dialog"><div id="dialogContent"></div></dialog>
+  <div id="printArea" aria-hidden="true"></div>
+  <script src="app.js"></script>
+</body>
+</html>

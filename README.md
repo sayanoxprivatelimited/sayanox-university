@@ -108,3 +108,15 @@ We value:
 
 **Welcome to Sayanox University.**  
 Study hard. Build real things. Level up.
+
+## Website
+
+The English-language learning site is a lightweight static website. It includes
+introductory lessons in ten subjects, browser-local progress, and printable
+self-reported completion certificates. Certificates are not independently
+verified credentials. No account or backend is required; progress is tied to
+one browser and may be lost if its site data is cleared.
+
+To run locally, start `python3 -m http.server 4173` in the repository root and
+open `http://localhost:4173`. Run the smoke tests with `node tests/smoke.cjs`.
+The site can be deployed as static files on Vercel without a build step.
