@@ -51,3 +51,77 @@ const quizzes = {
     {q:'How should important AI-generated claims be treated?', options:['Verify them against reliable sources','Assume they are always true','Share private data to check them'], answer:0, explanation:'AI outputs can be wrong; verify important claims and protect private data.'}
   ]
 };
+// Additional questions keep the checks introductory and formative.
+const additionalQuestions = {
+  python: [
+    {q:'What does range(1, 4) produce?', options:['1, 2, 3','1, 2, 3, 4','0, 1, 2, 3'], answer:0, explanation:'The stop value is excluded.'},
+    {q:'Which operator compares equality?', options:['==','=','+='], answer:0, explanation:'== compares values; = assigns.'},
+    {q:'What does len([3, 5]) return?', options:['2','8','1'], answer:0, explanation:'len counts the elements.'},
+    {q:'What exception can int("hello") raise?', options:['ValueError','IndentationError','None'], answer:0, explanation:'Text that cannot be parsed as an integer raises ValueError.'},
+    {q:'Why is indentation important in Python?', options:['It defines code blocks','It changes variable names','It compiles the program'], answer:0, explanation:'Indentation groups statements into blocks.'}
+  ],
+  rust: [
+    {q:'What command creates a Cargo project?', options:['cargo new','cargo push','rust init network'], answer:0, explanation:'cargo new creates a new package.'},
+    {q:'Which keyword declares a function?', options:['fn','def','function'], answer:0, explanation:'Rust functions use fn.'},
+    {q:'Which symbol creates a shared reference?', options:['&','*','%'], answer:0, explanation:'& borrows a shared reference.'},
+    {q:'What does match do?', options:['Selects a branch by pattern','Installs a package','Modifies all variables'], answer:0, explanation:'match compares a value to patterns.'},
+    {q:'What is the purpose of ownership?', options:['Manage values and memory safely','Disable type checking','Always copy all data'], answer:0, explanation:'Ownership rules support memory safety without a garbage collector.'}
+  ],
+  c: [
+    {q:'Which header declares printf?', options:['stdio.h','stdlib.py','math.css'], answer:0, explanation:'printf is declared in stdio.h.'},
+    {q:'What ends a typical C statement?', options:[';','@',':'], answer:0, explanation:'Most statements end with a semicolon.'},
+    {q:'What does a pointer store?', options:['An address','An entire source file','Only a character'], answer:0, explanation:'A pointer holds an address to an object or function.'},
+    {q:'What does %d format in printf?', options:['An int','A string','A floating-point value'], answer:0, explanation:'%d formats an int in decimal.'},
+    {q:'Why enable compiler warnings?', options:['To catch potential problems','To replace all testing','To remove all runtime errors'], answer:0, explanation:'Warnings highlight many potential defects but cannot replace testing.'}
+  ],
+  web: [
+    {q:'Which element is a main page heading?', options:['h1','span','style'], answer:0, explanation:'h1 identifies a top-level heading.'},
+    {q:'Which attribute supplies alternative text for an image?', options:['alt','href','lang'], answer:0, explanation:'alt provides a text alternative.'},
+    {q:'Which CSS property changes text color?', options:['color','display','margin'], answer:0, explanation:'color controls foreground text color.'},
+    {q:'What does display: flex enable?', options:['Flexbox layout','A database connection','Code compilation'], answer:0, explanation:'Flexbox arranges children in flexible rows or columns.'},
+    {q:'Why use semantic elements?', options:['To communicate structure and meaning','To guarantee faster internet','To avoid all CSS'], answer:0, explanation:'Semantic HTML helps browsers and assistive technologies interpret content.'}
+  ],
+  javascript: [
+    {q:'Which keyword declares a function?', options:['function','define','fn'], answer:0, explanation:'The function keyword declares a function.'},
+    {q:'What does document.querySelector return?', options:['The first matching element or null','Every match as an array','Only text'], answer:0, explanation:'It returns the first matching element, or null.'},
+    {q:'Which operator checks strict equality?', options:['===','=', '=>'], answer:0, explanation:'=== compares without type coercion.'},
+    {q:'What is a safe way to insert user text into an element?', options:['textContent','innerHTML','eval'], answer:0, explanation:'textContent treats the value as text rather than HTML.'},
+    {q:'What is an event handler?', options:['A function called in response to an event','A CSS selector','A database row'], answer:0, explanation:'Handlers respond to events such as clicks.'}
+  ],
+  cs: [
+    {q:'What should a clear problem definition include?', options:['Inputs and expected outputs','Only a programming language','Only a variable name'], answer:0, explanation:'Inputs and outputs make the task testable.'},
+    {q:'What is an edge case?', options:['A boundary or unusual input','A guaranteed average input','A hardware brand'], answer:0, explanation:'Edge cases help expose assumptions at boundaries.'},
+    {q:'What is a dictionary typically used for?', options:['Looking up values by key','Storing one number only','Rendering a webpage'], answer:0, explanation:'A dictionary maps keys to values.'},
+    {q:'What does an empty-list test check?', options:['Behavior with no items','Only performance on large inputs','Network availability'], answer:0, explanation:'Empty inputs reveal boundary-condition bugs.'},
+    {q:'What is linear search worst-case complexity?', options:['O(n)','O(1)','O(log n)'], answer:0, explanation:'A linear search may inspect all n items.'}
+  ],
+  go: [
+    {q:'Which package provides Println?', options:['fmt','html','git'], answer:0, explanation:'fmt provides formatted I/O.'},
+    {q:'What does := do inside a function?', options:['Declares and initializes variables','Imports a package','Ends a loop'], answer:0, explanation:'Short variable declarations use :=.'},
+    {q:'Which keyword returns a function result?', options:['return','break','defer'], answer:0, explanation:'return supplies values to the caller.'},
+    {q:'What does range do in a for loop?', options:['Iterates over a collection','Downloads a package','Creates a class'], answer:0, explanation:'range iterates over elements or keys.'},
+    {q:'What is a map used for?', options:['Key-value lookup','Displaying an image only','Compiling Rust'], answer:0, explanation:'A map stores values indexed by keys.'}
+  ],
+  sql: [
+    {q:'What does ORDER BY do?', options:['Sorts query results','Deletes rows','Creates a table'], answer:0, explanation:'ORDER BY sorts selected results.'},
+    {q:'What is a primary key?', options:['A unique row identifier','A CSS selector','A table color'], answer:0, explanation:'A primary key uniquely identifies a row.'},
+    {q:'Which statement adds a row?', options:['INSERT','SELECT','DROP'], answer:0, explanation:'INSERT adds data to a table.'},
+    {q:'What does NOT NULL enforce?', options:['A value must be present','A column must be numeric','Rows cannot be selected'], answer:0, explanation:'NOT NULL disallows null values in the column.'},
+    {q:'Why check a DELETE WHERE clause?', options:['To avoid deleting unintended rows','To sort results','To create an index'], answer:0, explanation:'Without a filter, DELETE can remove all rows.'}
+  ],
+  git: [
+    {q:'What is a commit?', options:['A recorded snapshot','A running web server','A browser tab'], answer:0, explanation:'A commit records a snapshot and metadata.'},
+    {q:'What does git diff show?', options:['Differences between versions or changes','A user password','Only remote branches'], answer:0, explanation:'git diff displays changes between states.'},
+    {q:'What does git log show?', options:['Commit history','Current CPU usage','CSS rules'], answer:0, explanation:'git log displays commit history.'},
+    {q:'Why use a pull request?', options:['To review changes before merging','To replace all tests','To hide changes'], answer:0, explanation:'Pull requests support review and collaboration.'},
+    {q:'Which command starts a new local repository?', options:['git init','git merge','git status'], answer:0, explanation:'git init initializes a repository.'}
+  ],
+  ai: [
+    {q:'What is a model prediction?', options:['An estimate that can be wrong','A guaranteed fact','A privacy policy'], answer:0, explanation:'Predictions are uncertain and require evaluation.'},
+    {q:'What is data leakage?', options:['Information from evaluation influencing training','Only a network outage','Encrypting a backup'], answer:0, explanation:'Leakage can make evaluation overly optimistic.'},
+    {q:'Why review model errors?', options:['To understand failure modes','To guarantee perfect fairness','To skip evaluation'], answer:0, explanation:'Error analysis helps identify weaknesses.'},
+    {q:'What is a baseline?', options:['A simple reference for comparison','An encryption key','A database table'], answer:0, explanation:'A baseline helps assess whether a model adds value.'},
+    {q:'What should happen to private data?', options:['Protect it and limit access','Publish it by default','Put it in every prompt'], answer:0, explanation:'Limit exposure and handle sensitive information responsibly.'}
+  ]
+};
+for (const [id, extra] of Object.entries(additionalQuestions)) quizzes[id].push(...extra);

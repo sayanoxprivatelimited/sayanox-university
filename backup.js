@@ -4,9 +4,10 @@ const backupVersion = 1;
 const backupMaxBytes = 8 * 1024 * 1024;
 
 function backupKeys() {
-  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course'];
+  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course', 'sayanox-certificates-v1', 'sayanox-study-v1'];
   for (const course of courses) {
     keys.push(`sayanox-project-${course.id}`);
+    if (codeChallenges[course.id]) codeChallenges[course.id].forEach((_, index) => keys.push(challengeKey(course, index)));
     for (let index = 0; index < course.lessons.length; index++) {
       keys.push(lessonKey('notes', course, index), lessonKey('draft', course, index));
     }
@@ -25,7 +26,7 @@ function validateBackup(backup) {
   for (const [key, value] of Object.entries(backup.data)) {
     if (!allowed.has(key) || typeof value !== 'string') throw new Error('Backup contains an unsupported entry.');
     if (key === 'sayanox-last-course' && !validCourses.has(value)) throw new Error('Backup contains an unknown course.');
-    if ((key.startsWith('sayanox-notes-') || key.startsWith('sayanox-draft-')) && value.length > 20000) throw new Error('A note or draft is too long.');
+    if ((key.startsWith('sayanox-notes-') || key.startsWith('sayanox-draft-') || key.startsWith('sayanox-challenge-')) && value.length > 20000) throw new Error('A note or draft is too long.');
     if (key === 'sayanox-progress-v1') {
       const data = parseBackupValue(value, 'lesson progress');
       if (!validObject(data) || Object.entries(data).some(([id, entries]) => !validCourses.has(id) || !Array.isArray(entries) || entries.some(i => !Number.isInteger(i) || i < 0 || i >= validCourses.get(id).lessons.length))) throw new Error('Invalid lesson progress.');
@@ -33,6 +34,14 @@ function validateBackup(backup) {
     if (key === 'sayanox-quiz-scores') {
       const data = parseBackupValue(value, 'quiz scores');
       if (!validObject(data) || Object.entries(data).some(([id, score]) => !validCourses.has(id) || !Number.isInteger(score) || score < 0 || score > quizzes[id].length)) throw new Error('Invalid quiz scores.');
+    }
+    if (key === 'sayanox-study-v1') {
+      const data = parseBackupValue(value, 'study data');
+      if (!validObject(data) || !Number.isInteger(data.goal) || data.goal < 1 || data.goal > 10 || !validObject(data.days) || Object.keys(data.days).length > 5000 || Object.entries(data.days).some(([day, entry]) => !/^\d{4}-\d{2}-\d{2}$/.test(day) || !validObject(entry) || !Number.isInteger(entry.lessons) || entry.lessons < 0 || entry.lessons > 10000 || !Number.isInteger(entry.seconds) || entry.seconds < 0 || entry.seconds > 86400 || typeof entry.met !== 'boolean')) throw new Error('Invalid study data.');
+    }
+    if (key === 'sayanox-certificates-v1') {
+      const data = parseBackupValue(value, 'certificates');
+      if (!Array.isArray(data) || data.length > 1000 || data.some(record => !validObject(record) || !/^SU-[0-9A-F]{32}$/.test(record.id) || typeof record.name !== 'string' || record.name.length > 80 || !courses.some(course => course.title === record.course) || typeof record.date !== 'string' || !Number.isFinite(Date.parse(record.date)))) throw new Error('Invalid certificates.');
     }
     if (key === 'sayanox-bookmarks') {
       const data = parseBackupValue(value, 'bookmarks');
@@ -73,6 +82,7 @@ function restoreBackup(data) {
   lastCourse = localStorage.getItem('sayanox-last-course');
   storageAvailable = true;
   projectMemory = {};
+  if (typeof loadStudyData === 'function') loadStudyData();
   renderCourses();
 }
 const backupStatus = document.getElementById('backupStatus');
@@ -95,7 +105,7 @@ document.getElementById('backupFile').addEventListener('change', async event => 
     if (file.size > backupMaxBytes) throw new Error('Backup exceeds the 8 MB limit.');
     const backup = JSON.parse(await file.text());
     const data = validateBackup(backup);
-    if (!window.confirm('Replace all current Sayanox learning data in this browser with this backup? Notes, drafts, bookmarks, scores and progress not in the file will be removed.')) { backupStatus.textContent = 'Import cancelled. No data was changed.'; return; }
+    if (!window.confirm('Replace all current Sayanox learning data in this browser with this backup? Notes, drafts, bookmarks, scores, certificates and progress not in the file will be removed.')) { backupStatus.textContent = 'Import cancelled. No data was changed.'; return; }
     restoreBackup(data);
     backupStatus.textContent = 'Backup restored in this browser.';
   } catch (error) { backupStatus.textContent = `Could not import backup: ${error.message}`; }
