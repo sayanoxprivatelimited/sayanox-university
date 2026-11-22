@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Read free introductory Sayanox University course lessons without JavaScript."><title>Course reading — Sayanox University</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script src="theme.js"></script><link rel="stylesheet" href="styles.css"></head><body><header class="static-header"><div class="wrap"><a href="index.html#courses">← Back to Sayanox University</a></div></header><main class="wrap static-reading"><h1>Course reading</h1><p>Read these introductory lessons without JavaScript. The classroom, progress, quizzes and certificates require JavaScript.</p><nav aria-label="Courses"><a href="#python">Python Basics</a><a href="#rust">Getting Started with Rust</a><a href="#c">C Programming</a><a href="#web">HTML &amp; CSS Essentials</a><a href="#javascript">JavaScript Basics</a><a href="#cs">Computer Science Foundations</a><a href="#go">Go Fundamentals</a><a href="#sql">SQL &amp; Databases</a><a href="#git">Git &amp; Collaboration</a><a href="#ai">AI Foundations</a></nav><article id="python" class="static-course"><p class="eyebrow dark">PROGRAMMING / BEGINNER</p><h2>Python Basics</h2><p>Python is a general-purpose language used for automation, web applications, data analysis and machine learning. Its readable syntax makes it a welcoming first language, while its ecosystem supports serious production work.</p><p><strong>Background:</strong> Created by Guido van Rossum; first released in 1991.</p><section><h3>1. Meet Python</h3><p>Python is a readable, widely used programming language. Use print() to display text. To practice, install Python and run it in a terminal, or use a trusted online Python environment.</p><pre><code>print(&quot;Hello, world!&quot;)
+print(&quot;I am learning Python&quot;)</code></pre><p><strong>Practice:</strong> Print a greeting using your own name.</p></section><section><h3>2. Variables and data</h3><p>Variables store information. A string contains text, while an integer is a whole number. Python infers the type from the value. Use an f-string to insert variables into text.</p><pre><code>name = &quot;Mita&quot;
+age = 18
+print(f&quot;Hello {name}, age {age}&quot;)</code></pre><p><strong>Practice:</strong> Store your favorite subject in a variable and print it.</p></section><section><h3>3. Conditions and loops</h3><p>Use if to run code conditionally and a for loop to repeat an action. Indentation—the whitespace at the start of a line—is important in Python.</p><pre><code>for number in range(1, 4):
+    if number &gt; 1:
+        print(number)</code></pre><p><strong>Practice:</strong> Print the numbers from 1 to 5 and identify the even numbers.</p></section><section><h3>4. Functions and return values</h3><p>Functions group reusable behavior. Parameters receive input, and return sends a result back to the caller. Give functions names that describe what they do and test them with different inputs.</p><pre><code>def square(number):
+    return number * number
+
+print(square(5))</code></pre><p><strong>Practice:</strong> Write a function that converts minutes to seconds. Test it with zero and a positive value.</p></section><section><h3>5. Handling errors</h3><p>Programs can fail when input is invalid. Use try and except to handle expected exceptions without hiding unrelated problems. ValueError occurs when text cannot be converted to an integer.</p><pre><code>try:
+    number = int(&quot;42&quot;)
+    print(number * 2)
+except ValueError:
+    print(&quot;Please enter a whole number&quot;)</code></pre><p><strong>Practice:</strong> Change the input to non-numeric text and observe the result.</p></section><p><a href="https://docs.python.org/3/tutorial/">Official Python tutorial ↗</a></p></article>
+<article id="rust" class="static-course"><p class="eyebrow dark">PROGRAMMING / BEGINNER</p><h2>Getting Started with Rust</h2><p>Rust is a systems language designed to combine performance with strong memory-safety guarantees. Its ownership model helps catch many errors before a program runs.</p><p><strong>Background:</strong> Started by Graydon Hoare at Mozilla; the first stable release arrived in 2015.</p><section><h3>1. Meet Rust</h3><p>Rust is a systems programming language that emphasizes performance and memory safety. After installing Rust, create a project with cargo new hello and run it with cargo run.</p><pre><code>fn main() {
+    println!(&quot;Hello, Rust!&quot;);
+}</code></pre><p><strong>Practice:</strong> Change the program to display a message with your name.</p></section><section><h3>2. Variables and mutability</h3><p>In Rust, let creates a variable. Variables are immutable by default; use mut when a value needs to change. Rust can often infer the type.</p><pre><code>fn main() {
+    let mut score = 1;
+    score += 1;
+    println!(&quot;Score: {}&quot;, score);
+}</code></pre><p><strong>Practice:</strong> Create a mutable counter and increase its value.</p></section><section><h3>3. Understanding ownership</h3><p>Each value in Rust has an owner. When its owner leaves scope, the value is cleaned up. Borrowing lets you use a reference without taking ownership, helping keep memory safe.</p><pre><code>fn main() {
+    let name = String::from(&quot;Sayanox&quot;);
+    let borrowed = &amp;name;
+    println!(&quot;{}&quot;, borrowed);
+    println!(&quot;{}&quot;, name);
+}</code></pre><p><strong>Practice:</strong> Create a String and print it through a reference.</p></section><section><h3>4. Functions and control flow</h3><p>Functions use fn and may return a typed value. An if expression can select a value; both branches must have compatible types.</p><pre><code>fn double(value: i32) -&gt; i32 {
+    value * 2
+}
+
+fn main() {
+    println!(&quot;{}&quot;, double(4));
+}</code></pre><p><strong>Practice:</strong> Write a function that returns the larger of two integers.</p></section><section><h3>5. Recoverable errors</h3><p>Rust represents recoverable errors with Result&lt;T, E&gt;. Match forces you to consider success and failure explicitly, rather than silently ignoring an error.</p><pre><code>fn main() {
+    let parsed = &quot;42&quot;.parse::&lt;i32&gt;();
+    match parsed {
+        Ok(n) =&gt; println!(&quot;{}&quot;, n),
+        Err(e) =&gt; println!(&quot;Invalid number: {}&quot;, e),
+    }
+}</code></pre><p><strong>Practice:</strong> Try parsing a word instead of a number and inspect the error.</p></section><p><a href="https://play.rust-lang.org/">Open Rust Playground ↗</a></p></article>
+<article id="c" class="static-course"><p class="eyebrow dark">PROGRAMMING / BEGINNER</p><h2>C Programming</h2><p>C is a foundational compiled language used in operating systems, embedded devices and performance-sensitive software. It offers a close view of how programs use memory.</p><p><strong>Background:</strong> Developed by Dennis Ritchie at Bell Labs in the early 1970s.</p><section><h3>1. Meet C</h3><p>C is a compiled language and a foundation of systems programming. You need a C compiler to run it. The program starts in main and uses printf to display text.</p><pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+    printf(&quot;Hello, C!\n&quot;);
+    return 0;
+}</code></pre><p><strong>Practice:</strong> Save the program as hello.c and compile it with gcc hello.c -o hello.</p></section><section><h3>2. Data and operators</h3><p>Every variable in C has a type. int holds whole numbers and float holds decimal numbers. Arithmetic operators let you calculate with values.</p><pre><code>#include &lt;stdio.h&gt;
+int main(void) {
+    int a = 4, b = 3;
+    printf(&quot;Sum: %d\n&quot;, a + b);
+    return 0;
+}</code></pre><p><strong>Practice:</strong> Print the sum and product of two numbers.</p></section><section><h3>3. Conditions and loops</h3><p>if checks a condition and a for loop repeats work. Statements generally end with a semicolon.</p><pre><code>#include &lt;stdio.h&gt;
+int main(void) {
+    for (int i = 1; i &lt;= 5; i++) {
+        if (i % 2 == 0) printf(&quot;%d\n&quot;, i);
+    }
+    return 0;
+}</code></pre><p><strong>Practice:</strong> Change the code to show odd numbers from 1 to 10.</p></section><section><h3>4. Functions</h3><p>A function groups instructions behind a name. Its parameter types and return type describe the data it accepts and produces. Functions help reduce duplication.</p><pre><code>#include &lt;stdio.h&gt;
+int double_value(int n) {
+    return n * 2;
+}
+int main(void) {
+    printf(&quot;%d\n&quot;, double_value(4));
+    return 0;
+}</code></pre><p><strong>Practice:</strong> Write a function that returns the larger of two integers.</p></section><section><h3>5. Introducing pointers</h3><p>A pointer stores an address. The &amp; operator gets a variable’s address and * accesses the pointed-to value. Only dereference pointers that refer to valid objects.</p><pre><code>#include &lt;stdio.h&gt;
+int main(void) {
+    int value = 10;
+    int *ptr = &amp;value;
+    printf(&quot;%d\n&quot;, *ptr);
+    return 0;
+}</code></pre><p><strong>Practice:</strong> Change the value through the pointer and print the original variable.</p></section><p><a href="https://godbolt.org/">Open Compiler Explorer ↗</a></p></article>
+<article id="web" class="static-course"><p class="eyebrow dark">WEB DEVELOPMENT / BEGINNER</p><h2>HTML &amp; CSS Essentials</h2><p>HTML describes the structure and meaning of a web page; CSS controls its presentation. Together they are the foundation for accessible, responsive websites.</p><p><strong>Background:</strong> HTML was introduced by Tim Berners-Lee; CSS was developed by Håkon Wium Lie and Bert Bos.</p><section><h3>1. Structure with HTML</h3><p>HTML gives a web page its structure. Elements such as headings, paragraphs and links organize content. Save the code below as index.html and open it in a browser.</p><pre><code>&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello, web!&lt;/h1&gt;
+    &lt;p&gt;My first page.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre><p><strong>Practice:</strong> Change the page to include your name and a favorite topic.</p></section><section><h3>2. Style with CSS</h3><p>CSS controls colors, fonts and spacing. A selector chooses an element, and declarations set its styles.</p><pre><code>&lt;style&gt;
+  body { font-family: sans-serif; }
+  h1 { color: seagreen; }
+  p { padding: 16px; }
+&lt;/style&gt;</code></pre><p><strong>Practice:</strong> Change your heading color and paragraph padding.</p></section><section><h3>3. Layout and responsive design</h3><p>Flexbox helps arrange elements in a row or column. A viewport meta tag and media queries make pages easier to use across devices.</p><pre><code>&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;style&gt;
+  .row { display: flex; gap: 1rem; }
+  @media (max-width: 600px) {
+    .row { flex-direction: column; }
+  }
+&lt;/style&gt;</code></pre><p><strong>Practice:</strong> Create two cards that stack on a small screen.</p></section><p><a href="https://developer.mozilla.org/en-US/docs/Learn_web_development">MDN web learning ↗</a></p></article>
+<article id="javascript" class="static-course"><p class="eyebrow dark">WEB DEVELOPMENT / BEGINNER</p><h2>JavaScript Basics</h2><p>JavaScript brings behavior to websites and also runs outside the browser. It lets you respond to input, manipulate data and build interactive applications.</p><p><strong>Background:</strong> Created by Brendan Eich in 1995 for the Netscape browser.</p><section><h3>1. Meet JavaScript</h3><p>JavaScript adds interactivity to web pages. Run this code in your browser developer console. const creates a binding that cannot be reassigned.</p><pre><code>const greeting = &quot;Hello, JavaScript!&quot;;
+console.log(greeting);</code></pre><p><strong>Practice:</strong> Show a message with your name in the console.</p></section><section><h3>2. Functions and conditions</h3><p>Functions package reusable behavior. Use if and else to produce different results based on conditions.</p><pre><code>function greet(name) {
+  if (name) return `Hello, ${name}!`;
+  return &quot;Hello, learner!&quot;;
+}
+console.log(greet(&quot;Mita&quot;));</code></pre><p><strong>Practice:</strong> Write a function that returns double a number.</p></section><section><h3>3. Page interactions</h3><p>The DOM lets JavaScript find and change HTML elements. Use addEventListener to respond to events such as clicks.</p><pre><code>&lt;button id=&quot;hello&quot;&gt;Click me&lt;/button&gt;
+&lt;script&gt;
+  document.querySelector(&quot;#hello&quot;)
+    .addEventListener(&quot;click&quot;, () =&gt; {
+      alert(&quot;Keep learning!&quot;);
+    });
+&lt;/script&gt;</code></pre><p><strong>Practice:</strong> Create a button that shows a message when clicked.</p></section><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide">MDN JavaScript guide ↗</a></p></article>
+<article id="cs" class="static-course"><p class="eyebrow dark">FUNDAMENTALS / BEGINNER</p><h2>Computer Science Foundations</h2><p>Computer science studies computation, information and the methods used to solve problems. Strong fundamentals help you reason about correctness and efficiency across languages.</p><p><strong>Background:</strong> Computer science evolved through the work of many pioneers, including Ada Lovelace, Alan Turing and Grace Hopper.</p><section><h3>1. Problem solving and algorithms</h3><p>An algorithm is a clear sequence of steps for solving a problem. Before starting, write down the input, expected output and small examples. Then test each step.</p><pre><code>Problem: Find the larger number
+1. Read a and b
+2. If a &gt; b, return a
+3. Otherwise, return b</code></pre><p><strong>Practice:</strong> Write the steps for finding the largest of three numbers.</p></section><section><h3>2. Data structures</h3><p>Data structures organize information. A list or array stores values in order; a map or dictionary looks up values by key. Choose a structure that fits the problem.</p><pre><code>numbers = [10, 20, 30]
+student = {&quot;name&quot;: &quot;Mita&quot;, &quot;score&quot;: 90}
+print(numbers[0])
+print(student[&quot;name&quot;])</code></pre><p><strong>Practice:</strong> Create a list of three favorite books.</p></section><section><h3>3. Complexity and testing</h3><p>Big O describes how work grows as input grows. Visiting every item in a list once is O(n). Test solutions with normal, empty and boundary cases.</p><pre><code>def total(numbers):
+    result = 0
+    for number in numbers:  # one pass: O(n)
+        result += number
+    return result
+
+print(total([1, 2, 3]))</code></pre><p><strong>Practice:</strong> Test the function with an empty list and negative numbers.</p></section><p><a href="https://www.khanacademy.org/computing/computer-science">Explore computer science ↗</a></p></article>
+<article id="go" class="static-course"><p class="eyebrow dark">PROGRAMMING / BEGINNER</p><h2>Go Fundamentals</h2><p>Go is a compiled language focused on simplicity, fast builds and practical tooling. It is commonly used for network services, cloud infrastructure and command-line tools.</p><p><strong>Background:</strong> Designed at Google by Robert Griesemer, Rob Pike and Ken Thompson; announced in 2009.</p><section><h3>1. Meet Go</h3><p>Go is a compiled language designed for clear, practical software. Install Go, save the example as main.go and run it with go run main.go.</p><pre><code>package main
+
+import &quot;fmt&quot;
+
+func main() {
+    fmt.Println(&quot;Hello, Go!&quot;)
+}</code></pre><p><strong>Practice:</strong> Change the greeting to include your name.</p></section><section><h3>2. Variables and functions</h3><p>Use := to declare and initialize a local variable. Functions receive values through parameters and may return a result.</p><pre><code>func double(n int) int {
+    return n * 2
+}
+
+// Inside main:
+value := double(4)
+fmt.Println(value)</code></pre><p><strong>Practice:</strong> Write a function that adds two integers.</p></section><section><h3>3. Loops and slices</h3><p>Go uses for for looping. A slice is a flexible view over a sequence of elements. The range form lets you iterate through values.</p><pre><code>numbers := []int{1, 2, 3}
+for _, number := range numbers {
+    fmt.Println(number)
+}</code></pre><p><strong>Practice:</strong> Create a slice of three names and print each one.</p></section><p><a href="https://go.dev/play/">Open Go Playground ↗</a></p></article>
+<article id="sql" class="static-course"><p class="eyebrow dark">FUNDAMENTALS / BEGINNER</p><h2>SQL &amp; Databases</h2><p>SQL is a language for working with relational databases. You can define tables, retrieve information and update records while expressing the data you need.</p><p><strong>Background:</strong> Developed at IBM in the 1970s by Donald Chamberlin and Raymond Boyce.</p><section><h3>1. Tables and rows</h3><p>Relational databases organize data into tables containing rows and columns. A primary key uniquely identifies each row. Try the following in a SQLite environment.</p><pre><code>CREATE TABLE courses (
+  id INTEGER PRIMARY KEY,
+  title TEXT NOT NULL
+);
+INSERT INTO courses (id, title) VALUES (1, &#39;Python&#39;);</code></pre><p><strong>Practice:</strong> Add a second course with a unique id.</p></section><section><h3>2. Reading data</h3><p>SELECT retrieves columns from a table. WHERE filters rows, and ORDER BY sorts results. SQL keywords are case-insensitive; uppercase is a common convention.</p><pre><code>SELECT id, title
+FROM courses
+WHERE id &gt; 0
+ORDER BY title;</code></pre><p><strong>Practice:</strong> Select only the title of the course with id 1.</p></section><section><h3>3. Updating safely</h3><p>UPDATE changes existing rows and DELETE removes them. Always check the WHERE clause: without one, these statements affect every row. Back up important data first.</p><pre><code>UPDATE courses SET title = &#39;Python Basics&#39; WHERE id = 1;
+SELECT * FROM courses WHERE id = 1;</code></pre><p><strong>Practice:</strong> Update the title of your second course and confirm the result.</p></section><p><a href="https://www.sqlite.org/lang.html">SQLite language reference ↗</a></p></article>
+<article id="git" class="static-course"><p class="eyebrow dark">FUNDAMENTALS / BEGINNER</p><h2>Git &amp; Collaboration</h2><p>Git is a distributed version-control system that records changes over time. It helps individuals and teams experiment, review work and collaborate safely.</p><p><strong>Background:</strong> Created by Linus Torvalds in 2005 to support Linux kernel development.</p><section><h3>1. Your first repository</h3><p>Git records versions of files in a repository. Install Git, create a new folder, and run git init to begin. git status shows the current state of your working tree.</p><pre><code>mkdir my-project
+cd my-project
+git init
+git status</code></pre><p><strong>Practice:</strong> Create a file named notes.txt in your new repository.</p></section><section><h3>2. Making a commit</h3><p>A commit is a snapshot of staged changes. Review your changes, stage the files you want, then commit with a clear message. Configure your Git name and email if prompted.</p><pre><code>git status
+git add notes.txt
+git commit -m &quot;Add learning notes&quot;
+git log --oneline</code></pre><p><strong>Practice:</strong> Update your notes and make another descriptive commit.</p></section><section><h3>3. Branches and collaboration</h3><p>A branch gives work its own line of development. Create a branch, make changes, and merge it after review. On shared projects, pull requests let others review before merging.</p><pre><code>git switch -c add-notes
+# edit and commit your changes
+git switch main
+git merge add-notes</code></pre><p><strong>Practice:</strong> Create a practice branch and commit a small change. Check your default branch name before switching back.</p></section><p><a href="https://git-scm.com/book/en/v2">Read Pro Git ↗</a></p></article>
+<article id="ai" class="static-course"><p class="eyebrow dark">FUNDAMENTALS / BEGINNER</p><h2>AI Foundations</h2><p>AI covers approaches to building systems that perform tasks associated with human intelligence. Machine learning uses data to learn patterns, but results still require evaluation and human judgment.</p><p><strong>Background:</strong> AI has many contributors; John McCarthy coined the term “artificial intelligence” in 1956.</p><section><h3>1. What is machine learning?</h3><p>Machine learning builds models that learn patterns from data. Supervised learning uses labeled examples, while unsupervised learning looks for structure without labels. A prediction is not a guarantee.</p><pre><code>Example task: classify an email as spam or not spam
+Input: email text
+Label: spam or not spam
+Output: predicted label</code></pre><p><strong>Practice:</strong> Describe one real-world prediction problem and identify its input and output.</p></section><section><h3>2. Training and evaluation</h3><p>Split data into training and evaluation sets. The model learns from training examples; evaluation on unseen data estimates how well it may generalize. Avoid leaking evaluation data into training.</p><pre><code>data = [&quot;example 1&quot;, &quot;example 2&quot;, &quot;example 3&quot;, &quot;example 4&quot;]
+train = data[:3]
+test = data[3:]
+print(&quot;train:&quot;, train, &quot;test:&quot;, test)</code></pre><p><strong>Practice:</strong> Explain why evaluating on the same examples used for training can be misleading.</p></section><section><h3>3. Responsible AI</h3><p>AI systems can produce incorrect, biased or sensitive outputs. Check results against reliable sources, protect private information, and assess impacts on the people affected. Human judgment remains important.</p><pre><code>Before using an AI output:
+1. Verify important claims.
+2. Check for bias and missing context.
+3. Protect private data.
+4. Keep a human accountable.</code></pre><p><strong>Practice:</strong> Write a short checklist for safely using AI in a study project.</p></section><p><a href="https://developers.google.com/machine-learning/crash-course">Explore machine learning ↗</a></p></article></main></body></html>
