@@ -120,3 +120,32 @@ one browser and may be lost if its site data is cleared.
 To run locally, start `python3 -m http.server 4173` in the repository root and
 open `http://localhost:4173`. Run the smoke tests with `node tests/smoke.cjs`.
 The site can be deployed as static files on Vercel without a build step.
+
+### Course classroom and practice
+
+Open a course for its full-screen overview, background, lesson list, practice
+studio, progress and certificate. Python and SQL load their browser runtimes
+(Pyodide and sql.js, respectively) from public CDNs on first use, so they
+require an internet connection; JavaScript runs in a disposable web worker.
+HTML/CSS and DOM examples use a sandboxed preview. Runs time out after 45
+seconds. Rust, C and Go require an external compiler; Git and AI use a
+scratchpad and linked resources. The studio explains these limitations and
+does not pretend to execute unsupported languages. Content is introductory,
+not a complete professional curriculum, and completion is self-reported.
+
+Each course includes an optional three-question knowledge check with feedback,
+a best score, a focus mode, lesson bookmarks, and private per-lesson notes and
+editor drafts. The course dashboard resumes the most recently opened course.
+These features use browser-local storage, not accounts or cloud sync; clearing
+site data or using another device will remove or hide the saved information.
+Resetting a course clears its completion and quiz score but keeps notes, drafts
+and bookmarks. Knowledge checks are formative and do not verify certificate
+eligibility. Run code with Ctrl+Enter (or Command+Enter on a Mac).
+
+Each course now has a self-guided project brief with milestones, a self-review
+rubric and an optional stretch goal. Project checklist progress is stored
+locally and is not automatically graded or submitted. The course catalog also
+has versioned JSON export and import controls for Sayanox learning data. The
+backup contains notes and code in **plain text**; keep it private. Import
+validates the file and replaces this site's existing learning data only after
+confirmation. Backups are not cloud sync and certificates are not verified.
