@@ -6,7 +6,7 @@ certificates stay on the device. Existing course material is introductory.
 Features will be released and tested incrementally rather than represented by
 placeholder buttons or promises of accreditation.
 
-## Phase 1 — learning and practice (current work)
+## Phase 1 — learning and practice (shipped)
 
 - Add full-text search across published lesson titles, text, examples and
   exercises; personal notes are not searched or uploaded.
@@ -19,6 +19,16 @@ placeholder buttons or promises of accreditation.
   they are not hidden tests or a secure examination.
 - Build on existing bookmarks, notes, lesson navigation, quizzes, accessibility,
   responsive layouts, local backups, offline caching, SEO and CI. Expand tests.
+
+## Curriculum and inclusive content — first increment
+
+- The five introductory Python lessons have English guided steps and tips, an
+  optional single-question check, and short English, Bengali and Hindi supporting
+  summaries. The summary language preference is browser-local and can be backed
+  up. The no-JavaScript reading page includes the same guides and translations.
+- This is not a complete multilingual curriculum or a professional translation
+  review. Other courses, the interface and full lesson text remain English.
+  Intermediate/advanced lessons and other inclusive media remain planned.
 
 ## Later phases — planned, not yet implemented
 
