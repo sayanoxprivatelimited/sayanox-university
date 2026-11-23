@@ -56,9 +56,29 @@ vm.runInContext("openCourse('python'); currentView = 'lesson'; renderDialog()",c
 assert(!el('dialogContent').innerHTML.includes('id="certificateForm"'));
 assert(el('dialogContent').innerHTML.includes('data-action="download-notes"'));
 assert(el('dialogContent').innerHTML.includes('data-action="copy-example"'));
+assert(el('dialogContent').innerHTML.includes('<pre tabindex="0" aria-label="Example code">'));
 assert(el('dialogContent').innerHTML.includes('id="readingProgress"'));
 assert(el('dialogContent').innerHTML.includes('id="summaryLanguage"'));
 assert(el('dialogContent').innerHTML.includes('id="lessonCheckForm"'));
+assert(el('dialogContent').innerHTML.includes('id="editorFontSize"'));
+assert(el('dialogContent').innerHTML.includes('id="editorWrap"'));
+el('dialogContent').onchange({target:{id:'editorFontSize',value:'18'}});
+assert.equal(el('practiceEditor').style.fontSize,'18px');
+assert.equal(store.get('sayanox-editor-font-size'),'18');
+el('dialogContent').onchange({target:{id:'editorWrap',value:'off'}});
+assert.equal(el('practiceEditor').wrap,'off');
+assert.equal(store.get('sayanox-editor-wrap'),'off');
+el('dialogContent').onchange({target:{id:'editorFontSize',value:'100'}});
+assert.equal(store.get('sayanox-editor-font-size'),'18');
+assert.throws(() => vm.runInContext("validateBackup({format:backupFormat,version:backupVersion,data:{'sayanox-editor-wrap':'html'}})",context), /Invalid editor wrapping/);
+assert.throws(() => vm.runInContext("validateBackup({format:backupFormat,version:backupVersion,data:{'sayanox-editor-font-size':'999'}})",context), /Invalid editor size/);
+assert.equal(vm.runInContext("collectBackup().data['sayanox-editor-font-size']",context),'18');
+assert.equal(vm.runInContext('Object.entries(lessonExtras).every(([id, extras]) => { const course = courses.find(c => c.id === id); return course && extras.length === course.lessons.length && extras.every(e => [e.summaries.en, e.summaries.bn, e.summaries.hi, e.tip, e.check.explanation].every(Boolean) && e.steps.length >= 3 && e.check.answer >= 0 && e.check.answer < e.check.options.length); })',context),true);
+assert(vm.runInContext("searchLessons('সিলেক্টর').some(r => r.course.id === 'web')",context));
+assert(vm.runInContext("searchLessons('प्राइमरी').some(r => r.course.id === 'sql')",context));
+assert(vm.runInContext("searchLessons('বাইন্ডিং').some(r => r.course.id === 'javascript')",context));
+assert(vm.runInContext("courses.find(c => c.id === 'javascript').lessons[2].code.includes('textContent')",context));
+
 assert.equal(vm.runInContext('lessonExtras.python.length === courses[0].lessons.length && lessonExtras.python.every(e => [e.summaries.en, e.summaries.bn, e.summaries.hi, e.tip, e.check.explanation].every(Boolean) && e.steps.length >= 3 && e.check.answer >= 0 && e.check.answer < e.check.options.length)',context),true);
 el('dialogContent').onchange({target:{id:'summaryLanguage',value:'bn'}});
 assert.equal(store.get('sayanox-lesson-language'),'bn');
@@ -82,6 +102,13 @@ vm.runInContext("restoreBackup(validateBackup({format:backupFormat,version:backu
 assert.equal(vm.runInContext('lessonLanguage',context),'hi');
 vm.runInContext("restoreBackup(validateBackup({format:backupFormat,version:backupVersion,data:{}}))",context);
 assert.equal(vm.runInContext('lessonLanguage',context),'en');
+assert.equal(vm.runInContext('editorFontSize',context),'12');
+assert.equal(vm.runInContext('editorWrap',context),'soft');
+vm.runInContext("restoreBackup(validateBackup({format:backupFormat,version:backupVersion,data:{'sayanox-editor-font-size':'20','sayanox-editor-wrap':'off'}}))",context);
+assert.equal(vm.runInContext('editorFontSize',context),'20');
+assert.equal(vm.runInContext('editorWrap',context),'off');
+vm.runInContext("restoreBackup(validateBackup({format:backupFormat,version:backupVersion,data:{}}))",context);
+
 require('node:child_process').execFileSync(process.execPath, ['scripts/update-lesson-reading.cjs','--check']);
 assert(fs.readFileSync('sw.js','utf8').includes("'lesson-extras.js'"));
 assert(vm.runInContext("searchLessons('indentation python').some(r => r.course.id === 'python')",context));

@@ -20,14 +20,15 @@ placeholder buttons or promises of accreditation.
 - Build on existing bookmarks, notes, lesson navigation, quizzes, accessibility,
   responsive layouts, local backups, offline caching, SEO and CI. Expand tests.
 
-## Curriculum and inclusive content — first increment
+## Curriculum and inclusive content — current increments
 
-- The five introductory Python lessons have English guided steps and tips, an
+- All five introductory Python lessons and three lessons each in JavaScript,
+  HTML/CSS and SQL have English guided steps and tips, an
   optional single-question check, and short English, Bengali and Hindi supporting
   summaries. The summary language preference is browser-local and can be backed
   up. The no-JavaScript reading page includes the same guides and translations.
 - This is not a complete multilingual curriculum or a professional translation
-  review. Other courses, the interface and full lesson text remain English.
+  review. Remaining courses, the interface and full lesson text remain English.
   Intermediate/advanced lessons and other inclusive media remain planned.
 
 ## Motivation and UI — local-first increment
@@ -37,7 +38,8 @@ placeholder buttons or promises of accreditation.
   remain local. XP and achievements reflect current editable progress and can
   decrease on reset. Weekly events can include repeated completion after reset.
 - This is not a leaderboard, verified achievement system, account, or cloud sync.
-  Accessible preferences and install UX remain future work.
+  The practice editor has local font size and line-wrapping preferences; broader
+  accessibility preferences and install UX remain future work.
 
 ## Cloudflare backend — local experiment only
 
