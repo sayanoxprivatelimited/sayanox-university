@@ -3,14 +3,14 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const elements = {};
 function el(id) {
-  return elements[id] ??= {innerHTML:'', textContent:'', hidden:false, open:false, value:'', dataset:{}, style:{}, classList:{toggle(){return false}, contains(){return false}, remove(){}}, addEventListener(type, fn){this['on'+type]=fn}, querySelector(){return null}, setAttribute(){}, showModal(){this.open=true}, close(){this.open=false}};
+  return elements[id] ??= {innerHTML:'', textContent:'', hidden:false, open:false, value:'', dataset:{}, style:{}, appendChild(){}, classList:{toggle(){return false}, contains(){return false}, remove(){}}, addEventListener(type, fn){this['on'+type]=fn}, querySelector(){return null}, setAttribute(){}, showModal(){this.open=true}, close(){this.open=false}};
 }
 const filters = ['all','programming','web','fundamentals'].map(x => ({dataset:{filter:x}, classList:{toggle(){}}, addEventListener(type,fn){this.fn=fn}}));
 let printed = false;
 const store = new Map();
 let fakeAnswers = ['0','0','0','0','0','0','0','0'];
 class FakeFormData { get(key) { return fakeAnswers[Number(key.replace('question',''))] ?? null; } }
-const context = {document:{getElementById:el,querySelectorAll:()=>filters,createTreeWalker:()=>({nextNode(){return false}})},localStorage:{getItem(key){return store.has(key) ? store.get(key) : null},setItem(key,value){store.set(key,value)},removeItem(key){store.delete(key)}},window:{print(){printed=true},location:{search:''}},URLSearchParams,FormData:FakeFormData,crypto:{getRandomValues(a){a.fill(12);return a}},Intl,Date,console,setTimeout,clearTimeout};
+const context = {document:{getElementById:el,querySelectorAll:()=>filters,createTreeWalker:()=>({nextNode(){return false}}),createElement:()=>({textContent:'',className:''}),createTextNode:text=>({textContent:text})},localStorage:{getItem(key){return store.has(key) ? store.get(key) : null},setItem(key,value){store.set(key,value)},removeItem(key){store.delete(key)}},window:{print(){printed=true},confirm(){return true},location:{search:''}},URLSearchParams,FormData:FakeFormData,crypto:{getRandomValues(a){a.fill(12);return a}},Intl,Date,console,setTimeout,clearTimeout};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('course-details.js','utf8'), context);
 vm.runInContext(fs.readFileSync('quizzes.js','utf8'), context);
@@ -24,6 +24,24 @@ assert.equal((el('courseGrid').innerHTML.match(/class="course-card"/g)||[]).leng
 assert.equal(vm.runInContext('courses.every(c => courseProjects[c.id].tasks.length >= 4)',context),true);
 assert.equal(vm.runInContext('courses.every(c => quizzes[c.id].length === 8 && quizFor(c).every(q => q.answer >= 0 && q.answer < q.options.length))',context),true);
 assert.equal(vm.runInContext('courses.every(c => c.lessons.length >= 3 && courseDetails[c.id] && c.lessons.every(l => l.title && l.text && l.code && l.practice))',context),true);
+// Search result content and syntax tokens are rendered as text, not markup.
+const payload = '</strong><img src=x onerror=alert(1)>';
+const oldTitle = vm.runInContext('courses[0].lessons[0].title', context);
+context.payload = payload;
+vm.runInContext("courses[0].lessons[0].title = payload; renderLessonSearch('onerror')", context);
+assert(!el('lessonSearchResults').innerHTML.includes('<img'));
+assert(vm.runInContext('textSlots.includes(payload)', context));
+context.oldTitle = oldTitle; vm.runInContext('courses[0].lessons[0].title = oldTitle', context);
+const chunks = [];
+const originalCreateText = context.document.createTextNode, originalCreate = context.document.createElement;
+context.document.createTextNode = value => ({kind:'text', textContent:value});
+context.document.createElement = () => ({kind:'span', className:'', textContent:''});
+context.highlightTarget = {textContent:'', appendChild: item => chunks.push(item)};
+vm.runInContext("highlightExample(highlightTarget, 'def x():\\n  return 42 # <img>', 'python')", context);
+assert.equal(chunks.map(item=>item.textContent).join(''), 'def x():\n  return 42 # <img>');
+assert(chunks.some(item=>item.className === 'syntax-keyword' && item.textContent === 'def'));
+assert(chunks.every(item=>item.kind === 'text' || item.kind === 'span'));
+context.document.createTextNode = originalCreateText; context.document.createElement = originalCreate;
 filters[2].fn();
 assert.equal((el('courseGrid').innerHTML.match(/class="course-card"/g)||[]).length,2);
 for (const id of vm.runInContext('courses.map(c => c.id)', context)) {
@@ -35,12 +53,31 @@ for (const id of vm.runInContext('courses.map(c => c.id)', context)) {
 }
 vm.runInContext("openCourse('python'); currentView = 'lesson'; renderDialog()",context);
 assert(!el('dialogContent').innerHTML.includes('id="certificateForm"'));
+assert(el('dialogContent').innerHTML.includes('data-action="download-notes"'));
+assert(el('dialogContent').innerHTML.includes('data-action="copy-example"'));
+assert(el('dialogContent').innerHTML.includes('id="readingProgress"'));
+assert(vm.runInContext("searchLessons('indentation python').some(r => r.course.id === 'python')",context));
+assert.equal(vm.runInContext("searchLessons('not-a-real-lesson').length",context), 0);
+assert(vm.runInContext("searchLessons('PRINT(\"HELLO, WORLD!\")').some(r => r.course.id === 'python')",context));
+assert.equal(vm.runInContext("searchLessons('uniqueprivatenote').length",context),0);
+assert.equal(vm.runInContext("lessonMinutes(courses[0].lessons[0]) >= 3",context), true);
+assert(vm.runInContext("lessonMarkdown(courses[0], {title:'t', text:'x', code:'~~~', practice:'p'}, '').includes('~~~~\\n~~~\\n~~~~')",context));
+assert(vm.runInContext("lessonMarkdown(courses[0], courses[0].lessons[0], 'Private note').includes('Private note')",context));
+context.window.confirm = () => false;
+el('dialogContent').onclick({target:{closest(sel){return sel==='[data-action]'?{dataset:{action:'complete'}}:null}}});
+assert.equal(vm.runInContext('doneFor(currentCourse).length',context),0);
+context.window.confirm = () => true;
 el('dialogContent').oninput({target:{id:'lessonNotes',value:'My notes'}});
 assert.equal(store.get('sayanox-notes-python-0'),'My notes');
 el('dialogContent').oninput({target:{id:'practiceEditor',value:'print(42)'}});
 assert.equal(store.get('sayanox-draft-python-0'),'print(42)');
 el('dialogContent').onclick({target:{closest(sel){return sel==='[data-action]'?{dataset:{action:'bookmark'}}:null}}});
 assert(JSON.parse(store.get('sayanox-bookmarks'))['sayanox-bookmark-python-0']);
+vm.runInContext("currentView='challenge'; challengeIndex=0; renderDialog()",context);
+assert(el('dialogContent').innerHTML.includes('Hint 1'));
+assert(el('dialogContent').innerHTML.includes('id="challengeSolution" hidden'));
+vm.runInContext("challengeAttempts.add('python-0'); renderDialog()",context);
+assert(!el('dialogContent').innerHTML.includes('id="challengeSolution" hidden'));
 vm.runInContext("currentView='project'; renderDialog()",context);
 assert(el('dialogContent').innerHTML.includes('Build it step by step'));
 el('dialogContent').onchange({target:{matches(){return true},dataset:{projectTask:'0'},checked:true}});

@@ -207,6 +207,22 @@ to run runnable code. The Python and JavaScript example code challenges use
 public, local checks only, not secure evaluation. The suggested learning path
 is available at `roadmap/`.
 
+### Learning tools and future platform
+
+Use **Search all lessons** to find published lesson text, examples and practice
+prompts. Personal notes are not indexed. Lessons show an approximate time and
+beginner label, a reading progress indicator, an example copy button, and a
+Markdown download containing the lesson and your personal notes. Downloads are
+plain text; keep them private. Completion is confirmed and remains self-reported.
+Python and JavaScript challenges provide public hints and example solutions after
+an attempt in the current page session; they are not hidden tests or secure assessments. The roadmap page
+suggests web, backend, systems and AI paths using existing introductory courses.
+
+The planned move toward an optional Cloudflare backend and the larger feature
+list are described in [`docs/platform-roadmap.md`](docs/platform-roadmap.md).
+Those features, including accounts, cloud sync and platform-issued certificate
+lookup, are not implemented yet. The current site remains static and guest-only.
+
 ### Local records and privacy
 
 Certificate IDs are generated with secure random bytes. `verify/` checks only

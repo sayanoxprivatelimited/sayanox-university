@@ -9,3 +9,12 @@ const codeChallenges = {
     {title:'Sum an array', prompt:'Write total(numbers) to return the sum of all numbers, including an empty array.', starter:'function total(numbers) {\n  // Return the sum\n}', tests:'\nif (total([1,2,3]) !== 6) throw Error("Expected 6");\nif (total([]) !== 0) throw Error("An empty array should total 0");\nif (total([-2,2]) !== 0) throw Error("Expected 0");\nconsole.log("All 3 practice checks passed!");'}
   ]
 };
+// Hints and example solutions are public learning aids, not hidden grading data.
+codeChallenges.python[0].hints = ['A function returns a value with return.', 'Multiply the input by 2.'];
+codeChallenges.python[0].solution = 'def double(number):\n    return number * 2';
+codeChallenges.python[1].hints = ['Start with a total of zero.', 'Loop through the list and add each value to the total.'];
+codeChallenges.python[1].solution = 'def total(numbers):\n    result = 0\n    for number in numbers:\n        result += number\n    return result';
+codeChallenges.javascript[0].hints = ['Use return to send a value back.', 'Multiply the input by 2.'];
+codeChallenges.javascript[0].solution = 'function double(number) {\n  return number * 2;\n}';
+codeChallenges.javascript[1].hints = ['Start with a total of zero.', 'Use a for...of loop to add each number.'];
+codeChallenges.javascript[1].solution = 'function total(numbers) {\n  let result = 0;\n  for (const number of numbers) result += number;\n  return result;\n}';
