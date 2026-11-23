@@ -19,6 +19,7 @@ vm.runInContext(fs.readFileSync('challenges.js','utf8'), context);
 vm.runInContext(fs.readFileSync('app.js','utf8'), context);
 vm.runInContext(fs.readFileSync('backup.js','utf8'), context);
 assert.equal(vm.runInContext('courses.length',context),10);
+assert.equal(el('courseCount').textContent, String(vm.runInContext('courses.length',context)).padStart(2, '0'));
 assert.equal((el('courseGrid').innerHTML.match(/class="course-card"/g)||[]).length,10);
 assert.equal(vm.runInContext('courses.every(c => courseProjects[c.id].tasks.length >= 4)',context),true);
 assert.equal(vm.runInContext('courses.every(c => quizzes[c.id].length === 8 && quizFor(c).every(q => q.answer >= 0 && q.answer < q.options.length))',context),true);
@@ -66,7 +67,7 @@ assert(printed);
 assert(!el('printArea').innerHTML.includes('<Student>'));
 assert(vm.runInContext("textSlots.includes('<Student>')", context));
 assert(el('printArea').innerHTML.includes('Sayan Mahata'));
-assert(el('printArea').innerHTML.includes('not independently verified'));
+assert(el('printArea').innerHTML.includes('This checks the ID format only. Certificates are self-reported and not independently verified.'));
 assert.equal(JSON.parse(store.get('sayanox-certificates-v1'))[0].id, 'SU-' + '0C'.repeat(16));
 // Backup validates known keys and restores only application-owned data.
 store.set('unrelated-app-key','keep');
@@ -103,7 +104,54 @@ assert.equal(fakeWorker.data.mode,'python'); timeoutHandler();
 assert(fakeWorker.terminated); assert.match(el('studioOutput').textContent,/timed out/);
 // Static fallback and offline precache cover every course and every local asset.
 const html = fs.readFileSync('index.html','utf8'), staticCourses = fs.readFileSync('courses.html','utf8');
-assert.match(html, /<noscript>/);
+assert.match(html, /<noscript>[\s\S]*?Browse introductory courses[\s\S]*?<\/noscript>/);
+assert(html.includes('Self-reported completion certificate, not an independently verified or accredited credential.'));
+const footer = html.match(/<footer>[\s\S]*?<\/footer>/)[0];
+for (const [href, label] of [['about/','About'], ['contact/','Contact'], ['privacy/','Privacy'], ['terms/','Terms'], ['https://github.com/sayanoxprivatelimited/sayanox-university','GitHub']]) assert(footer.includes(`href="${href}">${label}</a>`));
+const disclaimer = 'This checks the ID format only. Certificates are self-reported and not independently verified.';
+assert(fs.readFileSync('verify/index.html','utf8').includes(disclaimer));
+const verifyEls = {verifyForm:{addEventListener(type, fn){this.submit = fn}}, certificateId:{value:''}, verifyResult:{textContent:''}};
+vm.runInNewContext(fs.readFileSync('verify.js','utf8'), {document:{getElementById:id=>verifyEls[id]}});
+for (const [input, expected] of [['SU-'+'a'.repeat(32), /format looks correct/], ['SU-'+'Z'.repeat(32), /format does not match/], ['', /format does not match/]]) {
+  verifyEls.certificateId.value = input; verifyEls.verifyForm.submit({preventDefault(){}}); assert.match(verifyEls.verifyResult.textContent, expected);
+}
+// Both hosts must serve the same policy; narrower Cloudflare rules detach before replacing.
+const vercel = JSON.parse(fs.readFileSync('vercel.json','utf8')).headers;
+const headerBlocks = fs.readFileSync('_headers','utf8').trim().split(/\n\s*\n/);
+const applyCloudflare = path => {
+  const result = {};
+  for (const block of headerBlocks) {
+    const [pattern, ...lines] = block.split('\n');
+    if (pattern !== '/*' && pattern !== path) continue;
+    for (const line of lines) { const text = line.trim(); if (text.startsWith('! ')) delete result[text.slice(2).toLowerCase()]; else { const i = text.indexOf(':'); const key = text.slice(0,i).toLowerCase(); result[key] = result[key] ? `${result[key]}, ${text.slice(i+1).trim()}` : text.slice(i+1).trim(); } }
+  }
+  return result;
+};
+for (const [path, special] of [['/', null], ['/runner-worker.js', '/runner-worker.js'], ['/preview.html', '/preview.html'], ['/preview', '/preview'], ['/preview/', '/preview/']]) {
+  const expected = Object.fromEntries(vercel[0].headers.map(h=>[h.key.toLowerCase(),h.value]));
+  if (special) for (const h of vercel.find(rule=>rule.source===special).headers) expected[h.key.toLowerCase()] = h.value;
+  assert.deepEqual(applyCloudflare(path), expected, `header mismatch for ${path}`);
+  const scriptSrc = expected['content-security-policy'].match(/(?:^|;)\s*script-src\s+([^;]+)/)[1];
+  assert(!scriptSrc.includes("'unsafe-inline'"), `unsafe inline scripts on ${path}`);
+}
+// The only inline bootstrap is hash-pinned for an offline opaque-origin preview.
+const cryptoNode = require('node:crypto');
+const preview = fs.readFileSync('preview.html','utf8');
+const bootstrap = preview.match(/<script>([\s\S]*?)<\/script>/)[1];
+const bootstrapHash = "'sha256-" + cryptoNode.createHash('sha256').update(bootstrap).digest('base64') + "'";
+assert(preview.includes(bootstrapHash));
+assert(applyCloudflare('/preview.html')['content-security-policy'].includes(bootstrapHash));
+for (const file of ['index.html','verify/index.html','courses.html','about/index.html','contact/index.html','privacy/index.html','terms/index.html','roadmap/index.html']) {
+  for (const script of fs.readFileSync(file,'utf8').matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) assert(/\bsrc=/.test(script[1]) && !script[2].trim(), `Unexpected inline script in ${file}`);
+}
+const siteUrl = fs.readFileSync('site-url.txt','utf8').trim();
+assert(html.includes(`rel="canonical" href="${siteUrl}"`));
+assert(html.includes(`property="og:url" content="${siteUrl}"`));
+const sitemap = fs.readFileSync('sitemap.xml','utf8');
+for (const path of ['', 'courses.html', 'roadmap/', 'about/', 'contact/', 'privacy/', 'terms/', 'verify/']) assert(sitemap.includes(`<loc>${new URL(path,siteUrl).href}</loc>`));
+assert(fs.readFileSync('robots.txt','utf8').includes(`Sitemap: ${new URL('sitemap.xml',siteUrl).href}`));
+const manifest = JSON.parse(fs.readFileSync('manifest.webmanifest','utf8'));
+assert(!/^[a-z]+:/i.test(manifest.start_url) && !/^[a-z]+:/i.test(manifest.scope));
 for (const id of vm.runInContext('courses.map(c => c.id)',context)) { assert(html.includes(`courses.html#${id}`)); assert(staticCourses.includes(`id="${id}"`)); }
 const swContext = {self:{addEventListener(){}}}; vm.createContext(swContext); vm.runInContext(fs.readFileSync('sw.js','utf8'),swContext);
 for (const item of vm.runInContext('FILES',swContext)) assert(fs.existsSync(item), `Missing precache asset: ${item}`);

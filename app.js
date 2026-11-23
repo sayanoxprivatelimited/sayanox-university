@@ -215,9 +215,10 @@ function runCode() {
   let mode = courseDetails[currentCourse.id].mode;
   if (mode === 'javascript' && /^\s*</.test(editorDraft)) mode = 'html-script';
   if (mode === 'html' || mode === 'html-script') {
-    const scripts = mode === 'html-script' ? "'unsafe-inline'" : "'none'";
+    const markup = editorDraft;
     frame.hidden = false;
-    frame.srcdoc = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src ${scripts}; form-action 'none'; base-uri 'none'">${editorDraft}`;
+    frame.onload = () => frame.contentWindow.postMessage({markup, allowScripts: mode === 'html-script'}, '*');
+    frame.src = 'preview.html';
     output.textContent = 'Preview rendered in a sandbox below.';
     return;
   }
@@ -247,7 +248,7 @@ function printCertificate(name, course) {
   if (!writeStored('sayanox-certificates-v1', JSON.stringify(certificates))) { window.alert('Could not save the certificate ID in this browser.'); return; }
   resetTextSlots();
   const date = new Intl.DateTimeFormat('en-GB', {day:'numeric',month:'long',year:'numeric'}).format(new Date());
-  document.getElementById('printArea').innerHTML = `<div class="print-certificate"><div class="print-brand">✳ &nbsp; SAYANOX UNIVERSITY</div><h1>Certificate of Completion</h1><h2>Celebrating your learning journey</h2><p>This certificate is proudly presented to</p><div class="print-name">${slotText(name)}</div><p>for completing the self-paced course</p><h2>${slotText(course.title)}</h2><p>Completed on ${date}</p><p>Certificate ID: ${slotText(id)}</p><p><small>Self-reported completion; not independently verified or accredited. Check this ID only in the issuing browser or from its imported backup.</small></p><div class="print-signatures"><div>${slotText(name)}<small>STUDENT</small></div><div>Sayan Mahata<small>OWNER, SAYANOX</small></div></div></div>`;
+  document.getElementById('printArea').innerHTML = `<div class="print-certificate"><div class="print-brand">✳ &nbsp; SAYANOX UNIVERSITY</div><h1>Certificate of Completion</h1><h2>Celebrating your learning journey</h2><p>This certificate is proudly presented to</p><div class="print-name">${slotText(name)}</div><p>for completing the self-paced course</p><h2>${slotText(course.title)}</h2><p>Completed on ${date}</p><p>Certificate ID: ${slotText(id)}</p><p><small>This checks the ID format only. Certificates are self-reported and not independently verified.</small></p><div class="print-signatures"><div>${slotText(name)}<small>STUDENT</small></div><div>Sayan Mahata<small>OWNER, SAYANOX</small></div></div></div>`;
   hydrateTextSlots(document.getElementById('printArea'));
   window.print();
 }
@@ -300,8 +301,8 @@ dialogContent.addEventListener('click', e => {
   if (action === 'retry-quiz') { quizResult = null; quizRetryAnswers = null; renderDialog(); return; }
   if (action === 'reset-progress') { if (window.confirm('Reset lesson completion and quiz score for this course? Your notes and code drafts will be kept.')) { delete progress[currentCourse.id]; delete quizScores[currentCourse.id]; quizResult = null; quizRetryAnswers = null; saveProgress(); writeStored('sayanox-quiz-scores', JSON.stringify(quizScores)); renderCourses(); renderDialog(); } return; }
   if (action === 'copy-code') { const status = document.getElementById('draftStatus'); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(document.getElementById('practiceEditor').value).then(() => { status.textContent = 'Code copied to clipboard'; }).catch(() => { status.textContent = 'Could not copy. Select the code and copy it manually.'; }); else status.textContent = 'Clipboard unavailable. Select the code and copy it manually.'; return; }
-  if (action === 'clear-output') { stopRunner(); document.getElementById('studioOutput').textContent = 'Output cleared.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.srcdoc = ''; return; }
-  if (action === 'reset') { stopRunner(); editorDraft = currentView === 'challenge' ? codeChallenges[currentCourse.id][challengeIndex].starter : defaultCode(currentCourse, currentLesson); writeStored(currentView === 'challenge' ? challengeKey() : lessonKey('draft'), editorDraft); document.getElementById('practiceEditor').value = editorDraft; document.getElementById('studioOutput').textContent = 'Example restored.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.srcdoc = ''; return; }
+  if (action === 'clear-output') { stopRunner(); document.getElementById('studioOutput').textContent = 'Output cleared.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.onload = null; frame.removeAttribute('src'); return; }
+  if (action === 'reset') { stopRunner(); editorDraft = currentView === 'challenge' ? codeChallenges[currentCourse.id][challengeIndex].starter : defaultCode(currentCourse, currentLesson); writeStored(currentView === 'challenge' ? challengeKey() : lessonKey('draft'), editorDraft); document.getElementById('practiceEditor').value = editorDraft; document.getElementById('studioOutput').textContent = 'Example restored.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.onload = null; frame.removeAttribute('src'); return; }
   if (action === 'previous' && currentLesson > 0) { currentLesson--; editorDraft = lessonDraft(currentCourse, currentLesson); }
   if (action === 'next' && currentLesson < currentCourse.lessons.length-1) { currentLesson++; editorDraft = lessonDraft(currentCourse, currentLesson); }
   if (action === 'complete') { const done = doneFor(currentCourse); if (!done.includes(currentLesson)) { done.push(currentLesson); if (typeof recordStudyLesson === 'function') recordStudyLesson(); } progress[currentCourse.id] = done; saveProgress(); renderCourses(); }

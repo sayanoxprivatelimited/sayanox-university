@@ -1,14 +1,7 @@
 document.getElementById('verifyForm').addEventListener('submit', event => {
   event.preventDefault();
-  const result = document.getElementById('verifyResult');
-  result.textContent = '';
-  const id = document.getElementById('certificateId').value.trim().toUpperCase();
-  try {
-    const records = JSON.parse(localStorage.getItem('sayanox-certificates-v1') || '[]');
-    const record = Array.isArray(records) && records.find(item => item && item.id === id);
-    if (!record) { result.textContent = 'No local record found. This does not establish whether a certificate was issued elsewhere.'; return; }
-    for (const line of ['Local self-reported record found — not independently verified.', `Name: ${record.name}`, `Course: ${record.course}`, `Date: ${record.date}`, `ID: ${record.id}`]) {
-      const p = document.createElement('p'); p.textContent = line; result.appendChild(p);
-    }
-  } catch { result.textContent = 'Certificate records could not be read in this browser.'; }
+  const id = document.getElementById('certificateId').value.trim();
+  document.getElementById('verifyResult').textContent = /^SU-[0-9A-F]{32}$/i.test(id)
+    ? 'ID format looks correct. This does not establish that a certificate was issued.'
+    : 'ID format does not match. Expected SU- followed by 32 hexadecimal characters.';
 });
