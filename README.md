@@ -232,7 +232,10 @@ checks that the static reading page is in sync.
 The planned move toward an optional Cloudflare backend and the larger feature
 list are described in [`docs/platform-roadmap.md`](docs/platform-roadmap.md).
 Those features, including accounts, cloud sync and platform-issued certificate
-lookup, are not implemented yet. The current site remains static and guest-only.
+lookup, are not implemented on the live site. The current site remains static
+and guest-only. An isolated [local Cloudflare/D1 experiment](prototype/cloudflare/README.md)
+exercises a possible sync and issuance API but is not production-ready, not
+connected to the website and not a public verification service.
 
 ### Local records and privacy
 

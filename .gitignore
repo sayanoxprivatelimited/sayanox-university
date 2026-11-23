@@ -18,3 +18,8 @@ venv/
 # Notes / local
 *.local.md
 private/
+
+# Local JavaScript tools and Cloudflare development state
+node_modules/
+.wrangler/
+.dev.vars*

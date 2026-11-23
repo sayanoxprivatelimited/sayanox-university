@@ -39,6 +39,16 @@ placeholder buttons or promises of accreditation.
 - This is not a leaderboard, verified achievement system, account, or cloud sync.
   Accessible preferences and install UX remain future work.
 
+## Cloudflare backend — local experiment only
+
+- `prototype/cloudflare/` contains an isolated local Worker/D1 experiment for
+  throwaway bearer-key accounts, revision-checked backup snapshots, and public
+  test issuance records with explicit consent and deletion. It rejects non-local
+  URLs. SQLite and Miniflare/D1 tests run in CI; the live site does not use it.
+- This is not production authentication, cloud sync, public verification, or
+  independently verified learning. The prototype README lists security, privacy,
+  operational and deployment gates before any real service can be launched.
+
 ## Later phases — planned, not yet implemented
 
 1. **Curriculum and inclusive content:** author and review intermediate and
