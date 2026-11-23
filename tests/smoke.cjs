@@ -141,9 +141,14 @@ assert.equal(backup.data['sayanox-notes-python-0'], 'My notes');
 assert.equal(backup.data['sayanox-project-python'], '[0]');
 assert(JSON.parse(backup.data['sayanox-certificates-v1'])[0].id.startsWith('SU-'));
 assert.equal(backup.data['unrelated-app-key'], undefined);
+assert(!el('courseGrid').innerHTML.includes('aria-label="Open '));
+store.set('sayanox-weekly-goal','12');
+assert.equal(vm.runInContext("collectBackup().data['sayanox-weekly-goal']",context),'12');
 context.savedBackup = backup;
 vm.runInContext('validateBackup(savedBackup)',context);
 assert.throws(() => vm.runInContext("validateBackup({format:'sayanox-learning-backup',version:1,data:{'unrelated-app-key':'bad'}})",context), /unsupported entry/);
+for (const invalid of ['0','36','1.5','<img>']) { context.invalidGoal = invalid; assert.throws(() => vm.runInContext("validateBackup({format:backupFormat,version:backupVersion,data:{'sayanox-weekly-goal':invalidGoal}})",context), /Invalid weekly goal/); }
+assert.equal(vm.runInContext("validateBackup({format:backupFormat,version:backupVersion,data:{'sayanox-weekly-goal':'35'}})['sayanox-weekly-goal']",context),'35');
 assert.throws(() => vm.runInContext("validateBackup({format:'sayanox-learning-backup',version:1,data:{'sayanox-progress-v1':'{\"python\":[999]}'}})",context), /Invalid lesson progress/);
 store.set('sayanox-notes-python-0','Changed');
 vm.runInContext('restoreBackup(savedBackup.data)',context);
