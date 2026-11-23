@@ -74,7 +74,9 @@ let currentCourse = null;
 let currentLesson = 0;
 let currentView = 'intro';
 let challengeIndex = 0;
+const challengeAttempts = new Set();
 let editorDraft = '';
+let disposeReadingProgress = () => {};
 let activeWorker = null;
 let runTimer = null;
 let quizResult = null;
@@ -105,6 +107,98 @@ function renderDashboard() {
   dashboard.hidden = !last && !completedCount;
   dashboard.innerHTML = `<div><span class="dashboard-icon">✳</span><div><strong>Your learning journey</strong><small>${completedCount} lesson${completedCount === 1 ? '' : 's'} completed across ${courses.length} courses · ${storageAvailable ? 'saved in this browser' : 'available for this session only'}</small></div></div>${last ? `<button data-resume="${slotText(last.id)}">Continue ${slotText(last.title)} ↗</button>` : ''}`;
   hydrateTextSlots(dashboard);
+}
+// Search only published lesson content; personal notes and drafts stay private.
+function searchLessons(input) {
+  const terms = input.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  if (!terms.length) return [];
+  return courses.flatMap(course => course.lessons.map((lesson, index) => ({course, lesson, index})))
+    .filter(({course, lesson}) => {
+      const text = [course.title, lesson.title, lesson.text, lesson.code, lesson.practice].join(' ').toLocaleLowerCase();
+      return terms.every(term => text.includes(term));
+    });
+}
+function renderLessonSearch(value) {
+  const panel = document.getElementById('lessonSearchResults');
+  const status = document.getElementById('lessonSearchStatus');
+  const matches = searchLessons(value);
+  if (!value.trim()) { panel.innerHTML = ''; status.textContent = 'Enter a search term to find lessons.'; return; }
+  status.textContent = matches.length ? `${matches.length} lesson${matches.length === 1 ? '' : 's'} found${matches.length > 12 ? '; showing first 12' : ''}.` : 'No lessons found. Try a different search.';
+  resetTextSlots();
+  panel.innerHTML = matches.slice(0, 12).map(({course, lesson, index}) => `<button type="button" class="lesson-search-result" data-search-course="${slotText(course.id)}" data-search-lesson="${index}"><strong>${slotText(lesson.title)}</strong><span>${slotText(course.title)} · Lesson ${index + 1}</span></button>`).join('');
+  hydrateTextSlots(panel);
+}
+function lessonMinutes(lesson) {
+  const words = `${lesson.title} ${lesson.text} ${lesson.code} ${lesson.practice}`.trim().split(/\s+/).length;
+  return Math.max(3, Math.ceil(words / 180) + 2); // Reading plus a short practice estimate.
+}
+function lessonMarkdown(course, lesson, notes) {
+  const fence = '~'.repeat(Math.max(3, ...(lesson.code.match(/~+/g) || []).map(s => s.length + 1)));
+  return `# ${course.title} — ${lesson.title}\n\n${lesson.text}\n\n## Example\n\n${fence}\n${lesson.code}\n${fence}\n\n## Practice\n\n${lesson.practice}\n\n## My notes\n\n${notes || '(No personal notes.)'}\n`;
+}
+function exportLessonNotes() {
+  const status = document.getElementById('notesStatus');
+  try {
+    const lesson = currentCourse.lessons[currentLesson];
+    const notes = document.getElementById('lessonNotes').value;
+    const url = URL.createObjectURL(new Blob([lessonMarkdown(currentCourse, lesson, notes)], {type:'text/markdown;charset=utf-8'}));
+    const link = document.createElement('a'); link.href = url; link.download = `sayanox-${currentCourse.id}-lesson-${currentLesson + 1}.md`;
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = 'Markdown downloaded. It contains your personal notes in plain text.';
+  } catch { status.textContent = 'Could not download notes in this browser.'; }
+}
+function copyLearningCode(value, statusId) {
+  const status = document.getElementById(statusId);
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(value).then(() => { status.textContent = 'Code copied.'; }).catch(() => { status.textContent = 'Could not copy. Select the code and copy it manually.'; });
+  else status.textContent = 'Clipboard unavailable. Select the code and copy it manually.';
+}
+// Highlight only known programming examples, using text nodes rather than HTML.
+function highlightExample(node, code, courseId) {
+  if (!node) return;
+  const languages = {
+    python: ['def','return','for','in','if','else','try','except','pass','import','from','as','True','False','None'],
+    javascript: ['const','let','function','return','if','else','for','of','new','true','false','null'],
+    rust: ['fn','let','mut','return','if','else','match','use','pub','impl'],
+    c: ['int','void','return','if','else','for','while','char','float','const'],
+    go: ['package','import','func','return','for','range','if','else','var'],
+    sql: ['SELECT','FROM','WHERE','ORDER','BY','CREATE','TABLE','INSERT','INTO','VALUES','UPDATE','SET','PRIMARY','KEY','NOT','NULL','INTEGER','TEXT']
+  };
+  if (!languages[courseId] || /^\s*</.test(code)) return;
+  const keywords = new Set(languages[courseId].map(word => word.toLowerCase()));
+  const comment = courseId === 'python' ? '#[^\\n]*' : courseId === 'sql' ? '--[^\\n]*' : '\\/\\/[^\\n]*';
+  const token = new RegExp(`${comment}|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|\\b[A-Za-z_][A-Za-z_0-9]*\\b|\\b\\d+(?:\\.\\d+)?\\b`, 'g');
+  node.textContent = '';
+  let previous = 0;
+  for (const match of code.matchAll(token)) {
+    node.appendChild(document.createTextNode(code.slice(previous, match.index)));
+    const value = match[0];
+    const kind = value.startsWith('#') || value.startsWith('//') || value.startsWith('--') ? 'comment' : value.startsWith('"') || value.startsWith("'") ? 'string' : /^\d/.test(value) ? 'number' : keywords.has(value.toLowerCase()) ? 'keyword' : '';
+    if (kind) { const span = document.createElement('span'); span.className = `syntax-${kind}`; span.textContent = value; node.appendChild(span); }
+    else node.appendChild(document.createTextNode(value));
+    previous = match.index + value.length;
+  }
+  node.appendChild(document.createTextNode(code.slice(previous)));
+}
+// Measures how much of the lesson has reached the visible viewport, not completion.
+function setupReadingProgress() {
+  const lesson = dialogContent.querySelector('[data-reading-content]');
+  const bar = dialogContent.querySelector('#readingProgress');
+  if (!lesson || !bar) return;
+  const containers = [dialogContent.querySelector('.classroom-content'), dialogContent.querySelector('.classroom-layout'), dialog].filter(Boolean);
+  const update = () => {
+    const rect = lesson.getBoundingClientRect();
+    let bottom = window.innerHeight;
+    for (const container of containers) {
+      const overflow = window.getComputedStyle(container).overflowY;
+      if (overflow === 'auto' || overflow === 'scroll') bottom = Math.min(bottom, container.getBoundingClientRect().bottom);
+    }
+    const value = rect.height > 0 ? Math.round(Math.max(0, Math.min(1, (bottom - rect.top) / rect.height)) * 100) : 0;
+    bar.value = value; bar.setAttribute('aria-valuenow', String(value));
+  };
+  for (const container of containers) container.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update, {passive:true});
+  disposeReadingProgress = () => { for (const container of containers) container.removeEventListener('scroll', update); window.removeEventListener('resize', update); disposeReadingProgress = () => {}; };
+  update();
 }
 function renderSavedLessons() {
   resetTextSlots();
@@ -173,6 +267,7 @@ function openCourse(id) {
   if (typeof startStudyTimer === 'function') startStudyTimer();
 }
 function renderDialog() {
+  disposeReadingProgress();
   stopRunner();
   resetTextSlots();
   const c = currentCourse, detail = courseDetails[c.id], lesson = c.lessons[currentLesson];
@@ -185,7 +280,7 @@ function renderDialog() {
     content = `<div class="course-kicker">WELCOME TO YOUR COURSE</div><h1>${slotText(c.title)}</h1><p class="course-lead">${slotText(detail.overview)}</p><div class="course-info-grid"><div><span>LEVEL</span><strong>Beginner</strong></div><div><span>CURRICULUM</span><strong>${c.lessons.length} introductory lessons</strong></div><div><span>LEARN AT</span><strong>Your own pace</strong></div></div><section class="learn-panel"><h2>What you'll learn</h2><ul>${detail.outcomes.map(outcome => `<li><span>✓</span>${slotText(outcome)}</li>`).join('')}</ul></section><section class="origin-panel"><div class="origin-icon">✳</div><div><h2>The story behind ${slotText(detail.subject)}</h2><p>${slotText(detail.created)}</p><p>This course is an introductory learning resource from Sayanox University, owned by Sayan Mahata. It is not a complete or accredited qualification.</p></div></section><button class="button button-dark start-lesson" data-view="lesson" data-lesson="${currentLesson}">Start learning <span>→</span></button>`;
   } else if (currentView === 'challenge') {
     const challenge = codeChallenges[c.id][challengeIndex];
-    content = `<div class="course-kicker">PRACTICE WITH CODE</div><h1>Code challenges</h1><p class="course-lead">Write your solution in the practice studio, then run it against the example checks. These checks run on your device and are not secure or independently verified assessments.</p><div class="lesson-tabs">${codeChallenges[c.id].map((item, i) => `<button data-challenge-index="${i}" class="lesson-tab ${i === challengeIndex ? 'active' : ''}">Challenge ${i+1}</button>`).join('')}</div><section class="challenge-panel"><div class="challenge-icon">✦</div><div><span>CHALLENGE ${challengeIndex+1}</span><h2>${slotText(challenge.title)}</h2><p>${slotText(challenge.prompt)}</p></div></section><p class="completion-note">Your draft is stored in this browser. The example checks are visible in the source and do not verify a credential.</p>`;
+    content = `<div class="course-kicker">PRACTICE WITH CODE</div><h1>Code challenges</h1><p class="course-lead">Write your solution in the practice studio, then run it against the example checks. These checks run on your device and are not secure or independently verified assessments.</p><div class="lesson-tabs">${codeChallenges[c.id].map((item, i) => `<button data-challenge-index="${i}" class="lesson-tab ${i === challengeIndex ? 'active' : ''}">Challenge ${i+1}</button>`).join('')}</div><section class="challenge-panel"><div class="challenge-icon">✦</div><div><span>CHALLENGE ${challengeIndex+1}</span><h2>${slotText(challenge.title)}</h2><p>${slotText(challenge.prompt)}</p></div></section><div class="challenge-help"><h2>Need a hint?</h2>${challenge.hints.map((hint, i) => `<details><summary>Hint ${i+1}</summary><p>${slotText(hint)}</p></details>`).join('')}<p>Run your code once in this session to reveal an example solution. The checks and solution are public learning aids.</p><details id="challengeSolution" ${challengeAttempts.has(`${c.id}-${challengeIndex}`) ? '' : 'hidden'}><summary>Show example solution</summary><pre><code>${slotText(challenge.solution)}</code></pre><button class="secondary-button" type="button" data-action="copy-solution">Copy solution</button><span id="solutionCopyStatus" role="status" aria-live="polite"></span></details></div><p class="completion-note">Your draft is stored in this browser. The example checks are visible in the source and do not verify a credential.</p>`;
   } else if (currentView === 'project') {
     const project = courseProjects[c.id], finished = projectDone(c);
     content = `<div class="course-kicker">${slotText(project.level)} &nbsp; / &nbsp; GUIDED PROJECT</div><h1>${slotText(project.title)}</h1><p class="course-lead">${slotText(project.brief)}</p><div class="project-progress"><div><span>YOUR PROJECT CHECKLIST</span><strong id="projectCount">${finished.length} / ${project.tasks.length} steps</strong></div><div class="progress-track"><div id="projectProgress" class="progress-fill" style="width:${finished.length / project.tasks.length * 100}%"></div></div><small id="projectStatus" role="status">Self-tracked progress · saved in this browser when available</small></div><section class="project-section"><h2>What you'll practice</h2><ul class="project-outcomes">${project.outcomes.map(outcome => `<li>✓ &nbsp; ${slotText(outcome)}</li>`).join('')}</ul></section><section class="project-section"><div class="section-line"><h2>Build it step by step</h2><span>CHECK AS YOU GO</span></div><p>Use the practice studio or the recommended external tool. Your checklist is self-reported and does not submit or evaluate your work.</p><div class="project-tasks">${project.tasks.map((task, i) => `<label class="project-task"><input type="checkbox" data-project-task="${i}" ${finished.includes(i) ? 'checked' : ''}><span><small>STEP ${String(i+1).padStart(2,'0')}</small>${slotText(task)}</span></label>`).join('')}</div></section><section class="project-review"><span>SELF-REVIEW</span><h2>Before you finish</h2><ul>${project.review.map(item => `<li>${slotText(item)}</li>`).join('')}</ul></section><section class="project-stretch"><span>✦</span><div><strong>Go further</strong><p>${slotText(project.stretch)}</p></div></section><p class="completion-note">This is a self-guided project; no automated code review, instructor feedback or certificate verification is provided.</p>`;
@@ -196,7 +291,7 @@ function renderDialog() {
   } else if (currentView === 'certificate') {
     content = `<div class="course-kicker">CELEBRATE YOUR PROGRESS</div><h1>Your certificate</h1><p class="course-lead">Your effort deserves to be celebrated. Complete each lesson to create a personalized certificate of completion.</p><div class="certificate-form course-certificate"><h3>✳ &nbsp; Certificate of completion</h3>${completed ? `<p>Congratulations! Enter the name you want to appear on your certificate.</p><form id="certificateForm"><div class="form-row"><input name="studentName" maxlength="80" required placeholder="Your full name" aria-label="Your full name for the certificate"><button class="button button-dark" type="submit">Create certificate ↗</button></div></form><p class="form-note">Choose “Save as PDF” in your print dialog. This is a self-reported completion keepsake, not an exam-based or independently verified credential.</p>` : `<p>Complete ${c.lessons.length - done.length} more lesson${c.lessons.length - done.length === 1 ? '' : 's'} to unlock your certificate. Your progress is stored in this browser.</p><button class="secondary-button" data-view="lesson" data-lesson="${currentLesson}">Continue learning →</button>`}</div>`;
   } else {
-    content = `<div class="lesson-heading-row"><div class="course-kicker">LESSON ${String(currentLesson + 1).padStart(2, '0')} / ${String(c.lessons.length).padStart(2, '0')}</div><button class="bookmark-button" data-action="bookmark" aria-pressed="${Boolean(bookmarks[lessonKey('bookmark')])}">${bookmarks[lessonKey('bookmark')] ? '★ Saved' : '☆ Save lesson'}</button></div><h1>${slotText(title)}</h1><p class="course-lead">${slotText(lesson.text)}</p><section class="learn-panel"><div class="section-line"><h2>Example</h2><span>READ &amp; EXPLORE</span></div><p>Read through this example, then edit it in the practice workspace.</p><pre><code>${slotText(lesson.code)}</code></pre></section><section class="challenge-panel"><div class="challenge-icon">✦</div><div><span>YOUR TURN</span><h2>Practice challenge</h2><p>${slotText(lesson.practice)}</p></div></section><section class="notes-panel"><div><h2>My lesson notes</h2><span id="notesStatus" aria-live="polite">Stored on this device when available</span></div><label class="sr-only" for="lessonNotes">Notes for this lesson</label><textarea id="lessonNotes" maxlength="20000" placeholder="Write down what you learned, questions, or ideas to revisit…"></textarea><p>Your notes are private to this browser and may be lost if site data is cleared.</p></section><div class="lesson-actions"><button class="secondary-button" data-action="previous" ${currentLesson === 0 ? 'disabled' : ''}>← Previous</button><button class="button button-dark" data-action="complete">${done.includes(currentLesson) ? 'Completed ✓' : 'Mark as complete ✓'}</button><button class="secondary-button" data-action="next" ${currentLesson === c.lessons.length-1 ? 'disabled' : ''}>Next lesson →</button></div><p class="completion-note">Mark a lesson complete after reading and practicing. Completion is self-reported.</p>`;
+    content = `<div data-reading-content><div class="lesson-heading-row"><div class="course-kicker">LESSON ${String(currentLesson + 1).padStart(2, '0')} / ${String(c.lessons.length).padStart(2, '0')}</div><button class="bookmark-button" data-action="bookmark" aria-pressed="${Boolean(bookmarks[lessonKey('bookmark')])}">${bookmarks[lessonKey('bookmark')] ? '★ Saved' : '☆ Save lesson'}</button></div><h1>${slotText(title)}</h1><p class="lesson-meta">Beginner · About ${lessonMinutes(lesson)} minutes</p><div class="reading-progress"><label for="readingProgress">Reading progress</label><progress id="readingProgress" max="100" value="0" aria-label="Reading progress"></progress></div><p class="course-lead">${slotText(lesson.text)}</p><section class="learn-panel"><div class="section-line"><h2>Example</h2><span>READ &amp; EXPLORE</span></div><p>Read through this example, then edit it in the practice workspace.</p><pre><code id="lessonExample">${slotText(lesson.code)}</code></pre><button class="secondary-button" type="button" data-action="copy-example">Copy example</button><span id="exampleCopyStatus" role="status" aria-live="polite"></span></section><section class="challenge-panel"><div class="challenge-icon">✦</div><div><span>YOUR TURN</span><h2>Practice challenge</h2><p>${slotText(lesson.practice)}</p></div></section><section class="notes-panel"><div><h2>My lesson notes</h2><span id="notesStatus" aria-live="polite">Stored on this device when available</span></div><label class="sr-only" for="lessonNotes">Notes for this lesson</label><textarea id="lessonNotes" maxlength="20000" placeholder="Write down what you learned, questions, or ideas to revisit…"></textarea><p>Your notes are private to this browser and may be lost if site data is cleared.</p><button class="secondary-button" type="button" data-action="download-notes">Download lesson &amp; notes (.md)</button></section><div class="lesson-actions"><button class="secondary-button" data-action="previous" ${currentLesson === 0 ? 'disabled' : ''}>← Previous</button><button class="button button-dark" data-action="complete">${done.includes(currentLesson) ? 'Completed ✓' : 'Mark as complete ✓'}</button><button class="secondary-button" data-action="next" ${currentLesson === c.lessons.length-1 ? 'disabled' : ''}>Next lesson →</button></div><p class="completion-note">Mark a lesson complete after reading and practicing. Completion is self-reported.</p></div>`;
   }
   dialogContent.innerHTML = `<header class="classroom-top"><button class="classroom-back close-dialog">← <span>All courses</span></button><div class="classroom-brand"><span>✳</span> SAYANOX <small>UNIVERSITY</small></div><div class="classroom-top-right"><button class="focus-toggle" data-action="focus" aria-pressed="${dialog.classList.contains('focus-mode')}">◐ Focus mode</button><button class="close-dialog classroom-close" aria-label="Close course">×</button></div></header><div class="classroom-layout"><aside class="classroom-sidebar"><div class="sidebar-course"><span class="sidebar-label">YOUR LEARNING SPACE</span><h2>${slotText(c.title)}</h2><div class="sidebar-progress"><span>Course progress</span><strong>${Math.round(done.length / c.lessons.length * 100)}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${done.length / c.lessons.length * 100}%"></div></div><small>${done.length} of ${c.lessons.length} lessons completed</small>${storageAvailable ? '' : '<p class="storage-warning" role="status">Browser storage is unavailable. Changes may be lost when you leave.</p>'}</div><nav class="curriculum-nav" aria-label="Course navigation"><button data-view="intro" class="curriculum-link ${currentView === 'intro' ? 'selected' : ''}"><span>◈</span> Course overview</button><div class="curriculum-heading">COURSE CONTENT <span>${c.lessons.length} LESSONS</span></div>${c.lessons.map((l,i) => `<button data-view="lesson" data-lesson="${i}" class="curriculum-link ${currentView === 'lesson' && i === currentLesson ? 'selected' : ''}"><span class="lesson-indicator ${done.includes(i) ? 'done' : ''}">${done.includes(i) ? '✓' : String(i+1).padStart(2,'0')}</span><span>${slotText(l.title)}</span>${bookmarks[lessonKey('bookmark', c, i)] ? '<span class="bookmark-mark" aria-label="Saved lesson">★</span>' : ''}</button>`).join('')}${codeChallenges[c.id] ? `<button data-view="challenge" class="curriculum-link ${currentView === 'challenge' ? 'selected' : ''}"><span>⌘</span> Code challenges</button>` : ''}<button data-view="project" class="curriculum-link ${currentView === 'project' ? 'selected' : ''}"><span>▧</span> Guided project <span class="lock-status">${projectDone(c).length}/${courseProjects[c.id].tasks.length}</span></button><button data-view="quiz" class="curriculum-link ${currentView === 'quiz' ? 'selected' : ''}"><span>◇</span> Knowledge check <span class="lock-status">${Number.isInteger(quizScores[c.id]) ? `${quizScores[c.id]}/${quizzes[c.id].length}` : ''}</span></button><button data-view="certificate" class="curriculum-link cert-link ${currentView === 'certificate' ? 'selected' : ''}"><span>✳</span> Your certificate <span class="lock-status">${completed ? '✓' : '○'}</span></button></nav><button class="reset-progress" data-action="reset-progress">Reset course progress</button><div class="sidebar-help">LEARN WITH PURPOSE<br><span>Small steps. Real progress.</span></div></aside><main class="classroom-content"><div class="content-wrap"><div class="breadcrumb">COURSES <span>/</span> ${slotText(c.title.toUpperCase())} <span>/</span> ${slotText(title.toUpperCase())}</div>${content}${currentView === 'intro' ? `<button class="mobile-continue" data-view="lesson" data-lesson="${currentLesson}">Continue learning →</button>` : ''}<div class="content-footer"><span>SAYANOX UNIVERSITY</span><a href="${slotText(detail.resource)}" target="_blank" rel="noopener noreferrer">${slotText(detail.resourceLabel)} ↗</a></div></div></main><aside class="studio"><div class="studio-header"><div><span>YOUR PRACTICE SPACE</span><h2>Practice studio <i>✳</i></h2></div><span class="studio-live">● READY</span></div><p class="studio-description">${slotText(detail.environment)}</p><div class="editor-window"><div class="editor-bar"><span>● &nbsp; ${slotText(detail.subject)}</span><div class="editor-controls"><button data-action="copy-code" title="Copy code">Copy</button><button data-action="reset" title="Reset code">Reset ↺</button></div></div><label class="sr-only" for="practiceEditor">Practice editor</label><textarea id="practiceEditor" spellcheck="false" maxlength="20000" aria-label="Practice editor"></textarea><div class="editor-bottom"><span>${slotText(canRun ? 'CTRL / ⌘ + ENTER TO RUN' : 'SCRATCHPAD')}</span>${canRun ? '<button data-action="run" class="run-button">▶ Run code</button>' : `<a class="run-button" href="${slotText(detail.resource)}" target="_blank" rel="noopener noreferrer">Open resource ↗</a>`}</div></div><div class="output-window"><div class="output-header"><span>⌘ &nbsp; OUTPUT</span><button data-action="clear-output">Clear</button></div><pre id="studioOutput" aria-live="polite">${canRun ? 'Your output will appear here after you run your code.' : 'Use this space to write and edit. This course requires an external tool or local environment to run code.'}</pre><iframe id="previewFrame" title="Sandboxed code preview" sandbox="allow-scripts" hidden></iframe></div><p class="editor-save-status" id="draftStatus" aria-live="polite">Drafts are stored in this browser when available</p><div class="studio-tip"><span>✧</span><p><strong>Learn by doing.</strong><br>Experiment, make mistakes and try again. That’s how skills grow.</p></div><a class="studio-resource" href="${slotText(detail.resource)}" target="_blank" rel="noopener noreferrer">${slotText(detail.resourceLabel)} ↗</a></aside></div>`;
   hydrateTextSlots(dialogContent);
@@ -204,6 +299,7 @@ function renderDialog() {
   if (editor) editor.value = editorDraft;
   const notes = document.getElementById('lessonNotes');
   if (notes) notes.value = readStored(lessonKey('notes')) || '';
+  if (currentView === 'lesson') { highlightExample(document.getElementById('lessonExample'), lesson.code, c.id); setupReadingProgress(); }
   if (dialog.open) { const heading = dialogContent.querySelector('.content-wrap h1'); if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({preventScroll:true}); } }
 }
 function runCode() {
@@ -212,6 +308,7 @@ function runCode() {
   const frame = document.getElementById('previewFrame');
   editorDraft = editor.value;
   stopRunner();
+  if (currentView === 'challenge') { challengeAttempts.add(`${currentCourse.id}-${challengeIndex}`); const solution = document.getElementById('challengeSolution'); if (solution) solution.hidden = false; }
   let mode = courseDetails[currentCourse.id].mode;
   if (mode === 'javascript' && /^\s*</.test(editorDraft)) mode = 'html-script';
   if (mode === 'html' || mode === 'html-script') {
@@ -252,6 +349,9 @@ function printCertificate(name, course) {
   hydrateTextSlots(document.getElementById('printArea'));
   window.print();
 }
+document.getElementById('lessonSearchPanel').hidden = false;
+document.getElementById('lessonSearchInput').addEventListener('input', e => renderLessonSearch(e.target.value));
+document.getElementById('lessonSearchResults').addEventListener('click', e => { const button = e.target.closest('[data-search-course]'); if (!button) return; const course = courses.find(c => c.id === button.dataset.searchCourse); const index = Number(button.dataset.searchLesson); if (!course || !Number.isInteger(index) || index < 0 || index >= course.lessons.length) return; openCourse(course.id); currentLesson = index; currentView = 'lesson'; editorDraft = lessonDraft(course, index); renderDialog(); });
 document.getElementById('savedLessons').addEventListener('click', e => { const button = e.target.closest('[data-revisit-course]'); if (!button) return; openCourse(button.dataset.revisitCourse); currentLesson = Number(button.dataset.revisitLesson); currentView = 'lesson'; editorDraft = lessonDraft(currentCourse, currentLesson); renderDialog(); });
 document.getElementById('learningDashboard').addEventListener('click', e => { const button = e.target.closest('[data-resume]'); if (button) openCourse(button.dataset.resume); });
 grid.addEventListener('click', e => { const button = e.target.closest('[data-course]'); if(button) openCourse(button.dataset.course); });
@@ -300,15 +400,18 @@ dialogContent.addEventListener('click', e => {
   if (action === 'retry-wrong' && quizResult) { const questions = quizFor(currentCourse); quizRetryAnswers = quizResult.answers.map((answer, i) => answer === questions[i].answer ? answer : null); quizResult = null; renderDialog(); return; }
   if (action === 'retry-quiz') { quizResult = null; quizRetryAnswers = null; renderDialog(); return; }
   if (action === 'reset-progress') { if (window.confirm('Reset lesson completion and quiz score for this course? Your notes and code drafts will be kept.')) { delete progress[currentCourse.id]; delete quizScores[currentCourse.id]; quizResult = null; quizRetryAnswers = null; saveProgress(); writeStored('sayanox-quiz-scores', JSON.stringify(quizScores)); renderCourses(); renderDialog(); } return; }
+  if (action === 'copy-example') { copyLearningCode(currentCourse.lessons[currentLesson].code, 'exampleCopyStatus'); return; }
+  if (action === 'copy-solution' && currentView === 'challenge' && challengeAttempts.has(`${currentCourse.id}-${challengeIndex}`)) { copyLearningCode(codeChallenges[currentCourse.id][challengeIndex].solution, 'solutionCopyStatus'); return; }
+  if (action === 'download-notes') { exportLessonNotes(); return; }
   if (action === 'copy-code') { const status = document.getElementById('draftStatus'); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(document.getElementById('practiceEditor').value).then(() => { status.textContent = 'Code copied to clipboard'; }).catch(() => { status.textContent = 'Could not copy. Select the code and copy it manually.'; }); else status.textContent = 'Clipboard unavailable. Select the code and copy it manually.'; return; }
   if (action === 'clear-output') { stopRunner(); document.getElementById('studioOutput').textContent = 'Output cleared.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.onload = null; frame.removeAttribute('src'); return; }
   if (action === 'reset') { stopRunner(); editorDraft = currentView === 'challenge' ? codeChallenges[currentCourse.id][challengeIndex].starter : defaultCode(currentCourse, currentLesson); writeStored(currentView === 'challenge' ? challengeKey() : lessonKey('draft'), editorDraft); document.getElementById('practiceEditor').value = editorDraft; document.getElementById('studioOutput').textContent = 'Example restored.'; const frame = document.getElementById('previewFrame'); frame.hidden = true; frame.onload = null; frame.removeAttribute('src'); return; }
   if (action === 'previous' && currentLesson > 0) { currentLesson--; editorDraft = lessonDraft(currentCourse, currentLesson); }
   if (action === 'next' && currentLesson < currentCourse.lessons.length-1) { currentLesson++; editorDraft = lessonDraft(currentCourse, currentLesson); }
-  if (action === 'complete') { const done = doneFor(currentCourse); if (!done.includes(currentLesson)) { done.push(currentLesson); if (typeof recordStudyLesson === 'function') recordStudyLesson(); } progress[currentCourse.id] = done; saveProgress(); renderCourses(); }
+  if (action === 'complete') { const done = doneFor(currentCourse); if (!done.includes(currentLesson)) { if (!window.confirm('Mark this lesson as complete? Completion is self-reported.')) return; done.push(currentLesson); if (typeof recordStudyLesson === 'function') recordStudyLesson(); } progress[currentCourse.id] = done; saveProgress(); renderCourses(); }
   stopRunner(); renderDialog();
 });
-dialog.addEventListener('close', () => { stopRunner(); if (typeof stopStudyTimer === 'function') stopStudyTimer(); });
+dialog.addEventListener('close', () => { disposeReadingProgress(); stopRunner(); if (typeof stopStudyTimer === 'function') stopStudyTimer(); });
 dialogContent.addEventListener('submit', e => {
   if (e.target.id === 'quizForm') {
     e.preventDefault();
