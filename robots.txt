@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sayanox-university.sayanox-official-858.workers.dev/sitemap.xml
