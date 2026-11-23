@@ -30,7 +30,7 @@ const db = {prepare:sql => new Statement(sql), async batch(statements) { databas
  assert.equal(first.status,201); assert.match(first.json.token,/^su_dev_[0-9a-f]{64}$/); assert.notEqual(first.json.token,second.json.token);
  const token = first.json.token, token2 = second.json.token;
  assert.equal(database.prepare('SELECT count(*) AS n FROM accounts WHERE token_hash = ?').get(token).n,0);
- const backup = {format:'sayanox-learning-backup',version:1,createdAt:'2026-01-01T00:00:00.000Z',data:{'sayanox-notes-python-0':'private'}}, another = {format:'sayanox-learning-backup',version:1,data:{'sayanox-notes-python-0':'other'}};
+ const backup = {format:'sayanox-learning-backup',version:1,createdAt:'2026-01-01T00:00:00.000Z',data:{'sayanox-notes-python-0':'private','sayanox-editor-font-size':'18','sayanox-editor-wrap':'off'}}, another = {format:'sayanox-learning-backup',version:1,data:{'sayanox-notes-python-0':'other'}};
  assert.deepEqual((await call('/api/dev/backup',{token})).json,{revision:0,backup:null});
  assert.deepEqual((await call('/api/dev/backup',{method:'PUT',token,body:{revision:0,backup}})).json,{revision:1});
  assert.deepEqual((await call('/api/dev/backup',{token})).json,{revision:1,backup});

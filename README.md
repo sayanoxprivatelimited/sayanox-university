@@ -127,7 +127,7 @@ request itself, add equivalent headers there or serve files through its static
 assets binding. The runner worker has a separate CSP allowing eval for local
 JavaScript execution. The sandboxed preview has its own isolated CSP allowing
 a hash-pinned bootstrap and blob scripts only inside an opaque-origin iframe.
-The bootstrap is inline so it can run offline in an opaque sandbox; if edited,
+The bootstrap is inline to avoid a separate script fetch in the opaque sandbox; if edited,
 update its SHA-256 CSP hash in the preview meta tag and all preview rules in
 `_headers` and `vercel.json` (both hosts can serve extensionless HTML URLs).
 Its CSP restricts resource loads and form submission; sandboxed code can still navigate its own frame.
@@ -170,7 +170,11 @@ worker caches the site and runtimes after an initial successful online visit,
 subject to browser support and storage limits.
 HTML/CSS and DOM examples use a sandboxed preview. DOM examples support inline
 script elements; external scripts, inline event handlers and form submissions
-are blocked. Worker runs time out after 45 seconds. Rust, C and Go require an external compiler; Git and AI use a
+are blocked. In some browsers the sandboxed preview cannot load while offline
+even after caching; reconnect if the preview stays blank. The JavaScript page
+interaction example updates text rather than using a blocked modal alert. If an
+old saved draft still uses an alert, use Reset in the practice editor to restore
+the current example (this replaces that draft). Worker runs time out after 45 seconds. Rust, C and Go require an external compiler; Git and AI use a
 scratchpad and linked resources. The studio explains these limitations and
 does not pretend to execute unsupported languages. Content is introductory,
 not a complete professional curriculum, and completion is self-reported.
@@ -203,14 +207,16 @@ step. Bump the cache version in `sw.js` when changing cached assets.
 
 The classroom offers keyboard navigation, native modal focus containment, a
 reduced-motion mode, focus indicators, and responsive layouts. Use Ctrl/⌘+Enter
-to run runnable code. The Python and JavaScript example code challenges use
+to run runnable code. The practice editor offers text-size and line-wrapping
+preferences saved locally and included in backups. Tab remains available for
+keyboard navigation. The Python and JavaScript example code challenges use
 public, local checks only, not secure evaluation. The suggested learning path
 is available at `roadmap/`.
 
 ### Learning tools and future platform
 
 Use **Search all lessons** to find published lesson text, examples, practice
-prompts and Python supporting summaries and guide steps. Personal notes are not indexed. Lessons show an approximate time and
+prompts and supporting summaries and guide steps for Python, JavaScript, HTML/CSS and SQL. Personal notes are not indexed. Lessons show an approximate time and
 beginner label, a reading progress indicator, an example copy button, and a
 Markdown download containing the lesson and your personal notes. Downloads are
 plain text; keep them private. Completion is confirmed and remains self-reported.
@@ -218,9 +224,10 @@ Python and JavaScript challenges provide public hints and example solutions afte
 an attempt in the current page session; they are not hidden tests or secure assessments. The roadmap page
 suggests web, backend, systems and AI paths using existing introductory courses.
 
-All five Python lessons include English guided steps, a tip and an optional
-one-question practice check, plus short summaries in English, Bengali and Hindi.
-Use the summary language selector in a Python lesson; the rest of the lesson
+The five Python lessons and three lessons each in JavaScript, HTML/CSS and SQL
+include English guided steps, a tip, an optional one-question practice check and
+short English, Bengali and Hindi summaries. Use the summary language selector
+in one of these lessons; the rest of the lesson
 and interface remain in English. The preference is stored locally when possible
 and included in learning-data backups. The static `courses.html` reading page
 provides the steps, Bengali/Hindi summaries and check answers without JavaScript.

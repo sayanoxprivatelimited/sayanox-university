@@ -2,7 +2,7 @@
 // This is not production authentication, a verified assessment, or a live API.
 const courses = Object.freeze({python:'Python Basics',rust:'Getting Started with Rust',c:'C Programming',web:'HTML & CSS Essentials',javascript:'JavaScript Basics',cs:'Computer Science Foundations',go:'Go Fundamentals',sql:'SQL & Databases',git:'Git & Collaboration',ai:'AI Foundations'});
 const maxBody = 128 * 1024;
-const backupFixedKeys = new Set(['sayanox-progress-v1','sayanox-quiz-scores','sayanox-bookmarks','sayanox-last-course','sayanox-certificates-v1','sayanox-study-v1','sayanox-lesson-language','sayanox-weekly-goal']);
+const backupFixedKeys = new Set(['sayanox-progress-v1','sayanox-quiz-scores','sayanox-bookmarks','sayanox-last-course','sayanox-certificates-v1','sayanox-study-v1','sayanox-lesson-language','sayanox-weekly-goal','sayanox-editor-font-size','sayanox-editor-wrap']);
 function validBackupKey(key) {
   if (backupFixedKeys.has(key)) return true;
   const match = /^sayanox-(project|notes|draft|challenge)-([a-z]+)(?:-(\d+))?$/.exec(key);

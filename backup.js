@@ -4,7 +4,7 @@ const backupVersion = 1;
 const backupMaxBytes = 8 * 1024 * 1024;
 
 function backupKeys() {
-  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course', 'sayanox-certificates-v1', 'sayanox-study-v1', 'sayanox-lesson-language', 'sayanox-weekly-goal'];
+  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course', 'sayanox-certificates-v1', 'sayanox-study-v1', 'sayanox-lesson-language', 'sayanox-weekly-goal', 'sayanox-editor-font-size', 'sayanox-editor-wrap'];
   for (const course of courses) {
     keys.push(`sayanox-project-${course.id}`);
     if (codeChallenges[course.id]) codeChallenges[course.id].forEach((_, index) => keys.push(challengeKey(course, index)));
@@ -25,6 +25,8 @@ function validateBackup(backup) {
   const validBookmarks = new Set(courses.flatMap(course => course.lessons.map((_, index) => lessonKey('bookmark', course, index))));
   for (const [key, value] of Object.entries(backup.data)) {
     if (!allowed.has(key) || typeof value !== 'string') throw new Error('Backup contains an unsupported entry.');
+    if (key === 'sayanox-editor-font-size' && !['12','14','16','18','20'].includes(value)) throw new Error('Invalid editor size.');
+    if (key === 'sayanox-editor-wrap' && !['soft','off'].includes(value)) throw new Error('Invalid editor wrapping.');
     if (key === 'sayanox-weekly-goal' && !/^(?:[1-9]|[12][0-9]|3[0-5])$/.test(value)) throw new Error('Invalid weekly goal.');
     if (key === 'sayanox-lesson-language' && !['en', 'bn', 'hi'].includes(value)) throw new Error('Invalid lesson summary language.');
     if (key === 'sayanox-last-course' && !validCourses.has(value)) throw new Error('Backup contains an unknown course.');
@@ -84,6 +86,9 @@ function restoreBackup(data) {
   lastCourse = localStorage.getItem('sayanox-last-course');
   const savedLanguage = localStorage.getItem('sayanox-lesson-language');
   lessonLanguage = ['en', 'bn', 'hi'].includes(savedLanguage) ? savedLanguage : 'en';
+  const savedEditorSize = localStorage.getItem('sayanox-editor-font-size'), savedEditorWrap = localStorage.getItem('sayanox-editor-wrap');
+  editorFontSize = ['12','14','16','18','20'].includes(savedEditorSize) ? savedEditorSize : '12';
+  editorWrap = ['soft','off'].includes(savedEditorWrap) ? savedEditorWrap : 'soft';
   storageAvailable = true;
   projectMemory = {};
   if (typeof loadStudyData === 'function') loadStudyData();
