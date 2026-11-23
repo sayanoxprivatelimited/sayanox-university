@@ -209,14 +209,25 @@ is available at `roadmap/`.
 
 ### Learning tools and future platform
 
-Use **Search all lessons** to find published lesson text, examples and practice
-prompts. Personal notes are not indexed. Lessons show an approximate time and
+Use **Search all lessons** to find published lesson text, examples, practice
+prompts and Python supporting summaries and guide steps. Personal notes are not indexed. Lessons show an approximate time and
 beginner label, a reading progress indicator, an example copy button, and a
 Markdown download containing the lesson and your personal notes. Downloads are
 plain text; keep them private. Completion is confirmed and remains self-reported.
 Python and JavaScript challenges provide public hints and example solutions after
 an attempt in the current page session; they are not hidden tests or secure assessments. The roadmap page
 suggests web, backend, systems and AI paths using existing introductory courses.
+
+All five Python lessons include English guided steps, a tip and an optional
+one-question practice check, plus short summaries in English, Bengali and Hindi.
+Use the summary language selector in a Python lesson; the rest of the lesson
+and interface remain in English. The preference is stored locally when possible
+and included in learning-data backups. The static `courses.html` reading page
+provides the steps, Bengali/Hindi summaries and check answers without JavaScript.
+These are introductory supporting summaries, not complete translated courses or
+professionally reviewed translations. After editing `lesson-extras.js`, run
+`node scripts/update-lesson-reading.cjs` and `node tests/smoke.cjs`; the latter
+checks that the static reading page is in sync.
 
 The planned move toward an optional Cloudflare backend and the larger feature
 list are described in [`docs/platform-roadmap.md`](docs/platform-roadmap.md).
