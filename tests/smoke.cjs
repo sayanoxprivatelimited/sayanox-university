@@ -147,6 +147,46 @@ for (const file of ['index.html','verify/index.html','courses.html','about/index
 const siteUrl = fs.readFileSync('site-url.txt','utf8').trim();
 assert(html.includes(`rel="canonical" href="${siteUrl}"`));
 assert(html.includes(`property="og:url" content="${siteUrl}"`));
+// SEO remains server-rendered, accurate, and aligned with the single site URL.
+assert(html.includes('<meta name="google-site-verification" content="WfYTLVQ9RGRXAi5adJQg6bqLVG5Am6ITTobTYieMxaE">'));
+assert.match(html, /<a href="courses\.html">Read free course lessons without JavaScript/);
+assert.match(html, /itemscope itemtype="https:\/\/schema\.org\/WebSite"/);
+assert.equal((staticCourses.match(/itemtype="https:\/\/schema\.org\/Course"/g) || []).length, vm.runInContext('courses.length',context));
+assert.equal((staticCourses.match(/itemprop="isAccessibleForFree" content="true"/g) || []).length, vm.runInContext('courses.length',context));
+for (const id of vm.runInContext('courses.map(c => c.id)', context)) assert(staticCourses.includes(`itemprop="url" href="${siteUrl}courses.html#${id}"`));
+const seoPages = [['index.html',''], ['courses.html','courses.html'], ['roadmap/index.html','roadmap/'], ['about/index.html','about/'], ['contact/index.html','contact/'], ['privacy/index.html','privacy/'], ['terms/index.html','terms/'], ['verify/index.html','verify/']];
+const titles = new Set();
+for (const [file,path] of seoPages) {
+  const contents = fs.readFileSync(file,'utf8'), url = new URL(path,siteUrl).href;
+  assert(contents.includes(`rel="canonical" href="${url}"`), `canonical for ${file}`);
+  assert(contents.includes(`property="og:url" content="${url}"`));
+  assert(contents.includes(`property="og:image" content="${siteUrl}social-card.png"`));
+  assert(contents.includes(`name="twitter:image" content="${siteUrl}social-card.png"`));
+  assert.match(contents, /<meta name="description" content="[^"]+"/);
+  const title = contents.match(/<title>([^<]+)<\/title>/)[1]; assert(!titles.has(title)); titles.add(title);
+}
+const card = fs.readFileSync('social-card.png');
+assert.equal(card.subarray(0,8).toString('hex'), '89504e470d0a1a0a');
+assert.equal(card.readUInt32BE(16),1200); assert.equal(card.readUInt32BE(20),630);
+// Exercise a domain change in a temporary copy; no site build is needed at runtime.
+const os = require('node:os'), path = require('node:path'), cp = require('node:child_process');
+const tempSeo = fs.mkdtempSync(path.join(os.tmpdir(), 'sayanox-seo-'));
+try {
+  fs.mkdirSync(path.join(tempSeo, 'scripts'));
+  fs.copyFileSync('scripts/update-site-url.cjs', path.join(tempSeo, 'scripts/update-site-url.cjs'));
+  for (const [file] of seoPages) { fs.mkdirSync(path.dirname(path.join(tempSeo, file)), {recursive:true}); fs.copyFileSync(file,path.join(tempSeo,file)); }
+  fs.writeFileSync(path.join(tempSeo,'site-url.txt'),'https://example.org/\n');
+  cp.execFileSync(process.execPath, ['scripts/update-site-url.cjs'], {cwd:tempSeo});
+  for (const [file,subpath] of seoPages) {
+    const contents=fs.readFileSync(path.join(tempSeo,file),'utf8');
+    assert(contents.includes(`rel="canonical" href="https://example.org/${subpath}"`));
+    assert(contents.includes('content="https://example.org/social-card.png"'));
+    assert(contents.includes(`property="og:url" content="https://example.org/${subpath}"`));
+  }
+  assert(fs.readFileSync(path.join(tempSeo,'courses.html'),'utf8').includes('itemprop="url" href="https://example.org/courses.html#python"'));
+  assert(fs.readFileSync(path.join(tempSeo,'sitemap.xml'),'utf8').includes('https://example.org/courses.html'));
+  assert(fs.readFileSync(path.join(tempSeo,'robots.txt'),'utf8').includes('https://example.org/sitemap.xml'));
+} finally { fs.rmSync(tempSeo,{recursive:true,force:true}); }
 const sitemap = fs.readFileSync('sitemap.xml','utf8');
 for (const path of ['', 'courses.html', 'roadmap/', 'about/', 'contact/', 'privacy/', 'terms/', 'verify/']) assert(sitemap.includes(`<loc>${new URL(path,siteUrl).href}</loc>`));
 assert(fs.readFileSync('robots.txt','utf8').includes(`Sitemap: ${new URL('sitemap.xml',siteUrl).href}`));

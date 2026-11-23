@@ -145,9 +145,21 @@ it is deployed there. HTTP headers can only be confirmed on the deployed host.
 
 For a custom domain, edit the HTTPS URL in `site-url.txt` and run
 `node scripts/update-site-url.cjs`, then commit the generated canonical and
-Open Graph URLs, sitemap and robots file. `manifest.webmanifest` uses relative
-URLs, so it follows the host without a domain edit. The generator is a
-maintenance tool, not a site build step; automated tests check the URLs stay in sync.
+Open Graph URLs, social card URLs, sitemap and robots file across the public
+pages. `manifest.webmanifest` uses relative URLs, so it follows the host without
+a domain edit. The generator is a maintenance tool, not a site build step;
+automated tests check the URLs stay in sync.
+
+### Search and social sharing
+
+The homepage includes the Google Search Console verification tag provided by
+the site owner. Once the latest site is deployed, use the HTML tag method in
+Search Console for the correct URL-prefix property and submit `/sitemap.xml`
+there. Adding the tag alone does not complete verification or guarantee search
+indexing or ranking. Public pages have unique titles, descriptions, canonical
+URLs and social cards. The static course-reading page includes Course microdata;
+search engines decide whether and how to use it. Certificates remain free,
+self-reported keepsakes and are not independently verified or accredited.
 
 ### Course classroom and practice
 
