@@ -30,6 +30,15 @@ placeholder buttons or promises of accreditation.
   review. Other courses, the interface and full lesson text remain English.
   Intermediate/advanced lessons and other inclusive media remain planned.
 
+## Motivation and UI — local-first increment
+
+- The dashboard now offers a weekly completion-event goal, Monday–Sunday activity,
+  derived XP and levels, and achievements. Daily goals and estimated study time
+  remain local. XP and achievements reflect current editable progress and can
+  decrease on reset. Weekly events can include repeated completion after reset.
+- This is not a leaderboard, verified achievement system, account, or cloud sync.
+  Accessible preferences and install UX remain future work.
+
 ## Later phases — planned, not yet implemented
 
 1. **Curriculum and inclusive content:** author and review intermediate and
@@ -54,9 +63,9 @@ placeholder buttons or promises of accreditation.
    are confirmed. No account is required today. Design for OAuth/magic links or
    password management only after a threat model, accessible recovery and 2FA
    review. Never store passwords, tokens or service secrets in client code.
-5. **Motivation and UI:** local-first streaks and daily goals already exist;
-   later explore XP, levels, achievements, weekly goals, calendar views, a11y
-   preferences, PWA install UX and reduced-motion-friendly celebration. Public
+5. **Motivation and UI:** local-first streaks, goals, weekly activity, XP, levels and achievements
+   exist; later explore richer calendar views, a11y preferences, PWA install UX
+   and reduced-motion-friendly celebration. Public
    leaderboards require opt-in profiles, moderation and server support.
 6. **Performance and security:** budget asset sizes, monitor real performance
    only with appropriate privacy choices, review caching/offline storage, CSP,

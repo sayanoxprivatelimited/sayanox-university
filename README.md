@@ -236,6 +236,17 @@ lookup, are not implemented yet. The current site remains static and guest-only.
 
 ### Local records and privacy
 
+The learning dashboard includes a weekly completion-event goal and a local
+Monday–Sunday activity view. XP is calculated from currently completed lessons
+(10 XP each), levels advance every 100 XP, and achievements are calculated from
+current lesson completion and quiz scores. Resetting course progress can remove
+XP and achievements; the weekly activity history counts completion events,
+including a lesson completed again after a reset. Existing historical study data
+is reused, not reconstructed from old completion dates. Goals and activity are
+stored on this device when possible and are included in learning-data backups.
+They are editable, self-reported learning aids, not verified achievements.
+Run `node tests/study.cjs` as well as the smoke tests when changing these tools.
+
 Certificate IDs are generated with secure random bytes. `verify/` checks only
 the ID format; it cannot tell whether an ID was issued. Anyone can create or
 edit certificates and local records. This is **not independent verification**,

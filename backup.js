@@ -4,7 +4,7 @@ const backupVersion = 1;
 const backupMaxBytes = 8 * 1024 * 1024;
 
 function backupKeys() {
-  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course', 'sayanox-certificates-v1', 'sayanox-study-v1', 'sayanox-lesson-language'];
+  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course', 'sayanox-certificates-v1', 'sayanox-study-v1', 'sayanox-lesson-language', 'sayanox-weekly-goal'];
   for (const course of courses) {
     keys.push(`sayanox-project-${course.id}`);
     if (codeChallenges[course.id]) codeChallenges[course.id].forEach((_, index) => keys.push(challengeKey(course, index)));
@@ -25,6 +25,7 @@ function validateBackup(backup) {
   const validBookmarks = new Set(courses.flatMap(course => course.lessons.map((_, index) => lessonKey('bookmark', course, index))));
   for (const [key, value] of Object.entries(backup.data)) {
     if (!allowed.has(key) || typeof value !== 'string') throw new Error('Backup contains an unsupported entry.');
+    if (key === 'sayanox-weekly-goal' && !/^(?:[1-9]|[12][0-9]|3[0-5])$/.test(value)) throw new Error('Invalid weekly goal.');
     if (key === 'sayanox-lesson-language' && !['en', 'bn', 'hi'].includes(value)) throw new Error('Invalid lesson summary language.');
     if (key === 'sayanox-last-course' && !validCourses.has(value)) throw new Error('Backup contains an unknown course.');
     if ((key.startsWith('sayanox-notes-') || key.startsWith('sayanox-draft-') || key.startsWith('sayanox-challenge-')) && value.length > 20000) throw new Error('A note or draft is too long.');
@@ -86,6 +87,7 @@ function restoreBackup(data) {
   storageAvailable = true;
   projectMemory = {};
   if (typeof loadStudyData === 'function') loadStudyData();
+  if (typeof loadWeeklyGoal === 'function') loadWeeklyGoal();
   renderCourses();
 }
 const backupStatus = document.getElementById('backupStatus');
