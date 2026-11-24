@@ -12,6 +12,7 @@ jobs:
           node-version: '22'
       - run: node tests/smoke.cjs
       - run: node tests/study.cjs
+      - run: node tests/curriculum.cjs
       - run: node tests/cloudflare-prototype.cjs
       - run: npm ci --prefix prototype/cloudflare --ignore-scripts --no-audit --no-fund
       - run: node prototype/cloudflare/test-d1.cjs

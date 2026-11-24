@@ -22,11 +22,16 @@ placeholder buttons or promises of accreditation.
 
 ## Curriculum and inclusive content — current increments
 
-- All five introductory Python lessons and three lessons each in JavaScript,
+- The original five Python lessons and original three lessons each in JavaScript,
   HTML/CSS and SQL have English guided steps and tips, an
   optional single-question check, and short English, Bengali and Hindi supporting
   summaries. The summary language preference is browser-local and can be backed
   up. The no-JavaScript reading page includes the same guides and translations.
+- All ten introductory courses have two additional English chapters and longer
+  explanations for their original lessons. New chapters have examples and
+  practice but do not yet have translated summaries or per-lesson checks.
+  Existing progress and certificate records remain stored; new lessons must also
+  be completed to unlock creation of a new certificate.
 - This is not a complete multilingual curriculum or a professional translation
   review. Remaining courses, the interface and full lesson text remain English.
   Intermediate/advanced lessons and other inclusive media remain planned.

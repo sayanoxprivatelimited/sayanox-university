@@ -112,7 +112,7 @@ Study hard. Build real things. Level up.
 ## Website
 
 The English-language learning site is a lightweight static website. It includes
-introductory lessons in ten subjects, browser-local progress, and printable
+56 introductory lessons in ten subjects, browser-local progress, and printable
 self-reported completion certificates. Certificates are not independently
 verified credentials. No account or backend is required; progress is tied to
 one browser and may be lost if its site data is cleared.
@@ -224,17 +224,26 @@ Python and JavaScript challenges provide public hints and example solutions afte
 an attempt in the current page session; they are not hidden tests or secure assessments. The roadmap page
 suggests web, backend, systems and AI paths using existing introductory courses.
 
-The five Python lessons and three lessons each in JavaScript, HTML/CSS and SQL
-include English guided steps, a tip, an optional one-question practice check and
-short English, Bengali and Hindi summaries. Use the summary language selector
+The original five Python lessons and original three lessons each in JavaScript,
+HTML/CSS and SQL include English guided steps, a tip, an optional one-question
+practice check and short English, Bengali and Hindi summaries. The newly added
+chapters are in English and do not yet have translated summaries or checks. Use the summary language selector
 in one of these lessons; the rest of the lesson
 and interface remain in English. The preference is stored locally when possible
-and included in learning-data backups. The static `courses.html` reading page
+and included in learning-data backups. All existing chapters now include additional
+explanations, and each of the ten courses has two new chapters with examples and
+practice exercises. Existing lesson indices, progress, notes, drafts and local
+certificate records remain intact. Newly added lessons must also be completed
+to unlock certificate creation; course-level completion and derived achievements
+can change as the curriculum grows. Previously generated records are not reissued.
+The static `courses.html` reading page
 provides the steps, Bengali/Hindi summaries and check answers without JavaScript.
 These are introductory supporting summaries, not complete translated courses or
 professionally reviewed translations. After editing `lesson-extras.js`, run
+`node scripts/update-expanded-lessons.cjs`, then
 `node scripts/update-lesson-reading.cjs` and `node tests/smoke.cjs`; the latter
-checks that the static reading page is in sync.
+checks that the static reading page is in sync. Run `node tests/curriculum.cjs`
+when changing the additional chapters or runnable examples.
 
 The planned move toward an optional Cloudflare backend and the larger feature
 list are described in [`docs/platform-roadmap.md`](docs/platform-roadmap.md).

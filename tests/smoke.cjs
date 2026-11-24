@@ -17,9 +17,13 @@ vm.runInContext(fs.readFileSync('quizzes.js','utf8'), context);
 vm.runInContext(fs.readFileSync('projects.js','utf8'), context);
 vm.runInContext(fs.readFileSync('challenges.js','utf8'), context);
 vm.runInContext(fs.readFileSync('lesson-extras.js','utf8'), context);
+vm.runInContext(fs.readFileSync('curriculum-expansion.js','utf8'), context);
 vm.runInContext(fs.readFileSync('app.js','utf8'), context);
 vm.runInContext(fs.readFileSync('backup.js','utf8'), context);
 assert.equal(vm.runInContext('courses.length',context),10);
+assert.equal(vm.runInContext('courses.reduce((sum, course) => sum + course.lessons.length, 0)',context),56);
+assert.equal(vm.runInContext('courses.every(c => c.lessons.length === lessonDepth[c.id].length + extraLessons[c.id].length && c.lessons.every(l => l.details && l.details.length >= 2))',context),true);
+
 assert.equal(el('courseCount').textContent, String(vm.runInContext('courses.length',context)).padStart(2, '0'));
 assert.equal((el('courseGrid').innerHTML.match(/class="course-card"/g)||[]).length,10);
 assert.equal(vm.runInContext('courses.every(c => courseProjects[c.id].tasks.length >= 4)',context),true);
@@ -73,13 +77,13 @@ assert.equal(store.get('sayanox-editor-font-size'),'18');
 assert.throws(() => vm.runInContext("validateBackup({format:backupFormat,version:backupVersion,data:{'sayanox-editor-wrap':'html'}})",context), /Invalid editor wrapping/);
 assert.throws(() => vm.runInContext("validateBackup({format:backupFormat,version:backupVersion,data:{'sayanox-editor-font-size':'999'}})",context), /Invalid editor size/);
 assert.equal(vm.runInContext("collectBackup().data['sayanox-editor-font-size']",context),'18');
-assert.equal(vm.runInContext('Object.entries(lessonExtras).every(([id, extras]) => { const course = courses.find(c => c.id === id); return course && extras.length === course.lessons.length && extras.every(e => [e.summaries.en, e.summaries.bn, e.summaries.hi, e.tip, e.check.explanation].every(Boolean) && e.steps.length >= 3 && e.check.answer >= 0 && e.check.answer < e.check.options.length); })',context),true);
+assert.equal(vm.runInContext('Object.entries(lessonExtras).every(([id, extras]) => { const course = courses.find(c => c.id === id); return course && extras.length === lessonDepth[id].length && extras.every(e => [e.summaries.en, e.summaries.bn, e.summaries.hi, e.tip, e.check.explanation].every(Boolean) && e.steps.length >= 3 && e.check.answer >= 0 && e.check.answer < e.check.options.length); })',context),true);
 assert(vm.runInContext("searchLessons('সিলেক্টর').some(r => r.course.id === 'web')",context));
 assert(vm.runInContext("searchLessons('प्राइमरी').some(r => r.course.id === 'sql')",context));
 assert(vm.runInContext("searchLessons('বাইন্ডিং').some(r => r.course.id === 'javascript')",context));
 assert(vm.runInContext("courses.find(c => c.id === 'javascript').lessons[2].code.includes('textContent')",context));
 
-assert.equal(vm.runInContext('lessonExtras.python.length === courses[0].lessons.length && lessonExtras.python.every(e => [e.summaries.en, e.summaries.bn, e.summaries.hi, e.tip, e.check.explanation].every(Boolean) && e.steps.length >= 3 && e.check.answer >= 0 && e.check.answer < e.check.options.length)',context),true);
+assert.equal(vm.runInContext('lessonExtras.python.length === lessonDepth.python.length && lessonExtras.python.every(e => [e.summaries.en, e.summaries.bn, e.summaries.hi, e.tip, e.check.explanation].every(Boolean) && e.steps.length >= 3 && e.check.answer >= 0 && e.check.answer < e.check.options.length)',context),true);
 el('dialogContent').onchange({target:{id:'summaryLanguage',value:'bn'}});
 assert.equal(store.get('sayanox-lesson-language'),'bn');
 assert.equal(el('lessonSummary').lang,'bn');
@@ -109,7 +113,12 @@ assert.equal(vm.runInContext('editorFontSize',context),'20');
 assert.equal(vm.runInContext('editorWrap',context),'off');
 vm.runInContext("restoreBackup(validateBackup({format:backupFormat,version:backupVersion,data:{}}))",context);
 
+require('node:child_process').execFileSync(process.execPath, ['scripts/update-expanded-lessons.cjs','--check']);
 require('node:child_process').execFileSync(process.execPath, ['scripts/update-lesson-reading.cjs','--check']);
+assert(fs.readFileSync('sw.js','utf8').includes("'curriculum-expansion.js'"));
+assert(vm.runInContext("searchLessons('nullish coalescing').some(r => r.course.id === 'javascript')",context));
+assert(vm.runInContext("lessonMarkdown(courses[0], courses[0].lessons[0], '').includes(lessonDepth.python[0][0])",context));
+assert(el('dialogContent').innerHTML.includes('class="lesson-depth"'));
 assert(fs.readFileSync('sw.js','utf8').includes("'lesson-extras.js'"));
 assert(vm.runInContext("searchLessons('indentation python').some(r => r.course.id === 'python')",context));
 assert.equal(vm.runInContext("searchLessons('not-a-real-lesson').length",context), 0);
@@ -149,6 +158,13 @@ el('dialogContent').onsubmit({target:{id:'quizForm'},preventDefault(){}});
 assert.equal(JSON.parse(store.get('sayanox-quiz-scores')).python,8);
 vm.runInContext("currentView='lesson'; renderDialog()",context);
 for (let i=0;i<5;i++) {
+  vm.runInContext(`currentLesson=${i}`,context);
+  el('dialogContent').onclick({target:{closest(sel){return sel==='[data-action]'?{dataset:{action:'complete'}}:null}}});
+}
+vm.runInContext("currentView='certificate'; renderDialog()",context);
+assert(!el('dialogContent').innerHTML.includes('id="certificateForm"')); // Old completion remains, but new chapters must also be marked complete.
+vm.runInContext("currentView='lesson'",context);
+for (let i=5;i<vm.runInContext('currentCourse.lessons.length',context);i++) {
   vm.runInContext(`currentLesson=${i}`,context);
   el('dialogContent').onclick({target:{closest(sel){return sel==='[data-action]'?{dataset:{action:'complete'}}:null}}});
 }
