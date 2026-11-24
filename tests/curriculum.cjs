@@ -2,11 +2,18 @@ const assert = require('node:assert/strict'), fs = require('node:fs'), vm = requ
 const {spawnSync,execFileSync} = require('node:child_process');
 const os = require('node:os'), path = require('node:path');
 const ctx = vm.createContext({}); vm.runInContext(fs.readFileSync('curriculum-expansion.js','utf8'),ctx);
-const depth = vm.runInContext('lessonDepth',ctx), additions = vm.runInContext('extraLessons',ctx);
+const depth = vm.runInContext('lessonDepth',ctx), additions = vm.runInContext('extraLessons',ctx), guides = vm.runInContext('chapterGuides',ctx);
 const ids = ['python','javascript','web','sql','rust','c','cs','go','git','ai'];
 assert.deepEqual(Object.keys(additions).sort(),ids.slice().sort());
+assert.deepEqual(Object.keys(guides).sort(),ids.slice().sort());
 for (const id of ids) {
   assert.equal(additions[id].length,2,`${id} new lessons`);
+  assert.equal(guides[id].length,additions[id].length,`${id} guide coverage`);
+  for (const guide of guides[id]) {
+    for (const key of ['goal','bn','result','mistake','question','answer']) assert.equal(typeof guide[key], 'string', `${id} ${key}`);
+    assert(guide.steps.length >= 3 && guide.steps.every(step => step.length > 30));
+    assert(/[\u0980-\u09ff]/u.test(guide.bn), `${id} Bengali summary`);
+  }
   assert(depth[id].every(item => item.length >= 2 && item.every(p => p.length > 50)),`${id} existing lesson explanations`);
   for (const lesson of additions[id]) {
     assert(lesson.title && lesson.text && lesson.code && lesson.practice && lesson.details.length >= 2);
@@ -32,7 +39,7 @@ for (const [i,lesson] of additions.sql.entries()) {
   else {
     const parts = lesson.code.split(';').map(x=>x.trim()).filter(Boolean);
     for (const statement of parts.slice(0,-1)) db.exec(statement);
-    const rows = db.prepare(parts.at(-1)).all(); assert.equal(rows.length,2); assert.equal(rows[0].learner,'Mita'); assert.equal(rows[0].title,'Python');
+    const rows = db.prepare(parts.at(-1)).all(); assert.equal(rows.length,2); assert.equal(rows[0].learner,'Mita'); assert.equal(rows[0].title,'Python'); assert.equal(rows[1].learner,'Asha'); assert.equal(rows[1].title,'Rust');
   }
   db.close();
 }

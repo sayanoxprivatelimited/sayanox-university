@@ -1,5 +1,5 @@
 // Bump this cache version whenever any listed static asset changes.
-const CACHE = 'sayanox-static-v9';
+const CACHE = 'sayanox-static-v10';
 const FILES = ['./', 'index.html', 'courses.html', 'course-reading.js', 'styles.css', 'favicon.svg', 'social-card.png', 'manifest.webmanifest', 'theme.js', 'course-details.js', 'quizzes.js', 'projects.js', 'challenges.js', 'lesson-extras.js', 'curriculum-expansion.js', 'app.js', 'study.js', 'backup.js', 'offline.js', 'runner-worker.js', 'preview.html', 'verify/', 'verify.js', 'roadmap/', 'about/', 'contact/', 'privacy/', 'terms/', 'vendor/pyodide/pyodide.js', 'vendor/pyodide/pyodide.asm.js', 'vendor/pyodide/pyodide.asm.wasm', 'vendor/pyodide/python_stdlib.zip', 'vendor/pyodide/pyodide-lock.json', 'vendor/sqljs/sql-wasm.js', 'vendor/sqljs/sql-wasm.wasm'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
