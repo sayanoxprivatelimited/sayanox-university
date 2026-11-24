@@ -16,6 +16,7 @@ for (const [courseId, extras] of Object.entries(extrasByCourse)) {
     matched = true;
     return article.replace(/<section><h3>(\d+)\.[\s\S]*?<\/section>/g, (section, number) => {
       const index = Number(number) - 1, extra = extras[index];
+      if (index >= extras.length) return section; // New chapters are English-only for now.
       if (!extra || index !== found) throw Error(`Missing or out-of-order ${courseId} guide ${number}`);
       found++;
       section = section.replace(markerPattern, '');
