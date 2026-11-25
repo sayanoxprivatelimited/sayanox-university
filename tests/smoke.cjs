@@ -23,6 +23,10 @@ vm.runInContext(fs.readFileSync('backup.js','utf8'), context);
 assert.equal(vm.runInContext('courses.length',context),10);
 assert.equal(vm.runInContext('courses.reduce((sum, course) => sum + course.lessons.length, 0)',context),56);
 assert.equal(vm.runInContext('courses.every(c => c.lessons.length === lessonDepth[c.id].length + extraLessons[c.id].length && c.lessons.every(l => l.details && l.details.length >= 2))',context),true);
+assert.equal(vm.runInContext('courses.every(c => c.lessons.slice(-2).every(l => l.guide && l.guide.steps.length >= 3))',context),true);
+assert(vm.runInContext("searchLessons('ডিকশনারিতে').some(r => r.lesson.title === 'Dictionaries and safe lookups')",context));
+assert(vm.runInContext("lessonMarkdown(courses[0], courses[0].lessons[5], '').includes('Common mistake:')",context));
+
 
 assert.equal(el('courseCount').textContent, String(vm.runInContext('courses.length',context)).padStart(2, '0'));
 assert.equal((el('courseGrid').innerHTML.match(/class="course-card"/g)||[]).length,10);
@@ -56,6 +60,10 @@ for (const id of vm.runInContext('courses.map(c => c.id)', context)) {
   assert(el('dialogContent').innerHTML.includes('Practice studio'));
   assert(el('dialogContent').innerHTML.includes('The story behind'));
 }
+vm.runInContext("openCourse('python'); currentLesson = 5; currentView = 'lesson'; renderDialog()",context);
+assert(el('dialogContent').innerHTML.includes('chapter-walkthrough'));
+assert(el('dialogContent').innerHTML.includes('Show the answer'));
+assert(el('dialogContent').innerHTML.includes('lang=\"bn\"'));
 vm.runInContext("openCourse('python'); currentView = 'lesson'; renderDialog()",context);
 assert(!el('dialogContent').innerHTML.includes('id="certificateForm"'));
 assert(el('dialogContent').innerHTML.includes('data-action="download-notes"'));

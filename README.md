@@ -226,9 +226,12 @@ suggests web, backend, systems and AI paths using existing introductory courses.
 
 The original five Python lessons and original three lessons each in JavaScript,
 HTML/CSS and SQL include English guided steps, a tip, an optional one-question
-practice check and short English, Bengali and Hindi summaries. The newly added
-chapters are in English and do not yet have translated summaries or checks. Use the summary language selector
-in one of these lessons; the rest of the lesson
+practice check and short English, Bengali and Hindi summaries. Each of the 20
+appended chapters has an English walkthrough, expected result, common mistake,
+optional self-check with an answer, and a short Bengali supporting summary.
+These are not full translations or professionally reviewed. The appended chapters
+do not yet have Hindi summaries or interactive multiple-choice checks. Use the
+summary language selector in one of the original guided lessons; the rest of the lesson
 and interface remain in English. The preference is stored locally when possible
 and included in learning-data backups. All existing chapters now include additional
 explanations, and each of the ten courses has two new chapters with examples and
@@ -239,7 +242,7 @@ can change as the curriculum grows. Previously generated records are not reissue
 The static `courses.html` reading page
 provides the steps, Bengali/Hindi summaries and check answers without JavaScript.
 These are introductory supporting summaries, not complete translated courses or
-professionally reviewed translations. After editing `lesson-extras.js`, run
+professionally reviewed translations. After editing `curriculum-expansion.js` or `lesson-extras.js`, run
 `node scripts/update-expanded-lessons.cjs`, then
 `node scripts/update-lesson-reading.cjs` and `node tests/smoke.cjs`; the latter
 checks that the static reading page is in sync. Run `node tests/curriculum.cjs`

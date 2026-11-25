@@ -29,7 +29,9 @@ placeholder buttons or promises of accreditation.
   up. The no-JavaScript reading page includes the same guides and translations.
 - All ten introductory courses have two additional English chapters and longer
   explanations for their original lessons. New chapters have examples and
-  practice but do not yet have translated summaries or per-lesson checks.
+  practice, an English step-by-step walkthrough, a short Bengali supporting
+  summary and a revealable self-check answer. They do not yet have Hindi
+  summaries or interactive multiple-choice checks.
   Existing progress and certificate records remain stored; new lessons must also
   be completed to unlock creation of a new certificate.
 - This is not a complete multilingual curriculum or a professional translation
