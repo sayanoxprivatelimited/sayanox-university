@@ -36,7 +36,9 @@ placeholder buttons or promises of accreditation.
   be completed to unlock creation of a new certificate.
 - This is not a complete multilingual curriculum or a professional translation
   review. Remaining courses, the interface and full lesson text remain English.
-  Intermediate/advanced lessons and other inclusive media remain planned.
+  The separate intermediate paths now offer 28 concise English lessons across
+  Python, backend, systems, web, DevOps and practical AI; these are starting
+  guides, not full coverage. Other inclusive media remain planned.
 
 ## Motivation and UI — local-first increment
 
@@ -74,7 +76,10 @@ placeholder buttons or promises of accreditation.
    scoring and accessibility accommodations. Today certificates are local,
    self-reported and not independently verified. A future issuance service may
    let a public page check that an ID was issued by this platform, but that alone
-   is not identity verification, proctoring or accreditation. QR codes, badges,
+   is not identity verification, proctoring or accreditation. The requested guest
+   model, per-course and all-path awards, LinkedIn and X sharing are not yet
+   implemented; public records require durable storage and production safeguards.
+   QR codes, badges,
    renewal and LinkedIn sharing depend on the future certificate model.
 4. **Guest-first accounts and Cloudflare:** design Workers APIs, D1 migrations,
    optional sign-in, guest-data merge, cross-device progress, privacy controls,
