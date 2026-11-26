@@ -275,3 +275,20 @@ edit certificates and local records. This is **not independent verification**,
 identity proof, or accreditation. Study streaks, daily goals
 and estimated visible-tab course time are also stored locally. The estimate
 may include idle time. No data is synced to a server. Backups are unencrypted.
+
+## Intermediate learning paths
+
+The English `advanced/` page contains 28 concise, example-led lessons across
+seven paths: advanced Python, Python backend, C, Rust, JavaScript/React, DevOps
+and practical AI. Examples may require local compilers, frameworks, network
+access or separately installed tools; they do not run in the site sandbox.
+These are introductory guides to intermediate topics, not a complete professional
+curriculum. Completion is self-reported and stored separately in browser local
+storage; the existing beginner-course backup does not include it. Certificates
+for these paths and public issuance verification are not yet implemented.
+The desired guest issuance model cannot independently verify identity or actual
+completion. A live issuance service requires durable storage, abuse controls,
+public-record consent, operational and security review, and deployment access.
+Edit `advanced/content.json`, then run `node scripts/update-advanced.cjs` and
+`node tests/advanced.cjs`. Append lessons rather than reordering them: browser
+progress currently uses course IDs and lesson indices.

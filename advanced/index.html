@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Practical intermediate programming lessons in Python, backend development, C, Rust, web development, DevOps and AI."><title>Intermediate Learning Paths | Sayanox University</title><link rel="icon" href="../favicon.svg" type="image/svg+xml"><script src="../theme.js"></script><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="styles.css"><script src="app.js" defer></script></head>
+<body><a class="skip-link" href="#paths">Skip to learning paths</a><header class="advanced-header"><div class="advanced-wrap"><a href="../index.html#courses">← Sayanox University</a><span>LEARN · BUILD · GROW</span></div></header><main><section class="advanced-hero"><div class="advanced-wrap"><span class="advanced-eyebrow">YOUR NEXT STEP</span><h1>Go beyond<br><em>the basics.</em></h1><p>Explore Python, backend development, systems, web, DevOps and practical AI through examples and hands-on exercises.</p><a class="advanced-link" href="#paths">Explore the paths ↓</a><p class="hero-meta">7 learning paths &nbsp; / &nbsp; 28 lessons &nbsp; / &nbsp; English</p></div></section><div class="advanced-wrap"><section class="advanced-intro"><div><span class="advanced-kicker">BUILD YOUR SKILLS</span><h2>Choose where to begin.</h2><p>These concise intermediate lessons are a starting point, not a complete professional curriculum. Read the prerequisites, try each example in the stated environment and test your understanding.</p></div><aside><strong>About certificates</strong><p>Completion here is self-reported and stored in this browser; the beginner-site backup does not include this progress. Publicly verifiable certificates for these paths are not available yet. Existing local certificates do not verify issuance or identity.</p></aside></section><section class="advanced-toolbar" aria-label="Learning paths"><div><h2 id="paths">Learning paths</h2><p id="advanced-progress" role="status" aria-live="polite">28 lessons across 7 paths</p><p id="advanced-save-status" role="status" aria-live="polite">Progress is saved on this device when browser storage is available.</p></div><label class="advanced-search" for="advanced-search">Find a topic <input id="advanced-search" type="search" placeholder="Try async or Docker" autocomplete="off"></label></section><nav class="advanced-quick" aria-label="Jump to a learning path"><a href="#python-intermediate">Python Intermediate &amp; Advanced</a><a href="#python-backend">Python Backend: APIs, Databases &amp; Deployment</a><a href="#advanced-c">Advanced C: Memory, Structures &amp; Files</a><a href="#rust-intermediate">Rust Intermediate</a><a href="#advanced-web">JavaScript &amp; React</a><a href="#devops-practical">DevOps: Docker, Git &amp; Linux</a><a href="#practical-ai">Practical Machine Learning &amp; Local LLMs</a></nav><p id="advanced-empty" hidden>No matching paths. Try another search.</p><div id="advanced-courses"><article class="advanced-course" id="python-intermediate" data-course="python-intermediate"><header><div><span class="advanced-kicker">PATH 01 · INTERMEDIATE</span><h2>Python Intermediate &amp; Advanced</h2><p><strong>Before you start:</strong> Python basics: variables, loops and functions.</p><p><strong>Practice setup:</strong> Use Python 3.11+ in a local virtual environment. Examples are independent files.</p></div><span class="course-progress" data-course-progress="python-intermediate">8 lessons</span></header><div class="advanced-lessons"><section class="advanced-lesson" id="python-intermediate-1" data-lesson="0"><details><summary><span class="lesson-number">01</span><span>Classes and instances</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A class defines behavior and an instance holds its own state. Methods receive the instance as self; initializing a new object calls __init__.</p><h3>Example</h3><pre tabindex="0"><code>class StudySession:
+    def __init__(self, topic, minutes):
+        self.topic = topic
+        self.minutes = minutes
+
+    def describe(self):
+        return f&quot;{self.topic}: {self.minutes} minutes&quot;
+
+session = StudySession(&quot;Python&quot;, 25)
+print(session.describe())</code></pre><h3>Walk through</h3><p>Create the object, trace the two attributes, then call describe. The result is Python: 25 minutes. Each new instance has its own attributes.</p><h3>Practice</h3><p>Create two sessions and print their descriptions. Reject negative minutes in the initializer.</p><div class="self-check"><h3>Check yourself</h3><p>Where does self.minutes live?</p><details><summary>Show answer</summary><p>On the instance referred to by self; it is not automatically shared by every instance.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="0"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-intermediate-2" data-lesson="1"><details><summary><span class="lesson-number">02</span><span>Inheritance and magic methods</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Inheritance lets a subclass reuse and extend a base class. Special methods such as __str__ define how objects behave with Python operations; prefer composition when inheritance does not represent a real is-a relationship.</p><h3>Example</h3><pre tabindex="0"><code>class Task:
+    def __init__(self, title):
+        self.title = title
+
+    def __str__(self):
+        return self.title
+
+class TimedTask(Task):
+    def __init__(self, title, minutes):
+        super().__init__(title)
+        self.minutes = minutes
+
+    def __str__(self):
+        return f&quot;{super().__str__()} ({self.minutes} min)&quot;
+
+print(TimedTask(&quot;Read&quot;, 20))</code></pre><h3>Walk through</h3><p>super().__init__ initializes the inherited title. print calls the overridden __str__, which includes the base string and duration.</p><h3>Practice</h3><p>Add a method that returns hours as a number; test zero and a positive duration.</p><div class="self-check"><h3>Check yourself</h3><p>What invokes __str__ here?</p><details><summary>Show answer</summary><p>print converts the object to text using its __str__ method.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="1"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-intermediate-3" data-lesson="2"><details><summary><span class="lesson-number">03</span><span>Decorators</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A decorator accepts a callable and returns a replacement callable. functools.wraps preserves useful metadata; decorators run when the function definition is evaluated.</p><h3>Example</h3><pre tabindex="0"><code>from functools import wraps
+
+def trace(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print(&quot;Calling&quot;, func.__name__)
+        return func(*args, **kwargs)
+    return wrapper
+
+@trace
+def add(a, b):
+    return a + b
+
+print(add(2, 3))</code></pre><h3>Walk through</h3><p>@trace is equivalent to rebinding add to trace(add). The wrapper prints a message, forwards the arguments and returns 5. Avoid logging sensitive arguments.</p><h3>Practice</h3><p>Write a decorator that prints Done after a successful function call, and make sure it returns the original result.</p><div class="self-check"><h3>Check yourself</h3><p>Why return func(*args, **kwargs)?</p><details><summary>Show answer</summary><p>It forwards the wrapped function’s result to the caller instead of discarding it.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="2"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-intermediate-4" data-lesson="3"><details><summary><span class="lesson-number">04</span><span>Generators and lazy iteration</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A generator produces values on demand with yield. It preserves local state between iterations, which can avoid building a large list, but an exhausted generator cannot simply be reused.</p><h3>Example</h3><pre tabindex="0"><code>def study_blocks(count):
+    for number in range(1, count + 1):
+        yield f&quot;Block {number}&quot;
+
+blocks = study_blocks(2)
+for block in blocks:
+    print(block)</code></pre><h3>Walk through</h3><p>Calling study_blocks creates a generator; the loop requests values one at a time. It prints Block 1 and Block 2. Iteration stops when the function ends.</p><h3>Practice</h3><p>Change the function to yield a pair of block number and minutes, then test count 0.</p><div class="self-check"><h3>Check yourself</h3><p>What happens when the generator is exhausted?</p><details><summary>Show answer</summary><p>Further iteration produces no values; create a new generator if you need another pass.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="3"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-intermediate-5" data-lesson="4"><details><summary><span class="lesson-number">05</span><span>Context managers</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A with statement manages a resource and runs cleanup when the block exits, including on exceptions. contextmanager allows a generator with a yield to define setup and cleanup.</p><h3>Example</h3><pre tabindex="0"><code>from contextlib import contextmanager
+
+@contextmanager
+def session():
+    print(&quot;start&quot;)
+    try:
+        yield &quot;ready&quot;
+    finally:
+        print(&quot;cleanup&quot;)
+
+with session() as state:
+    print(state)</code></pre><h3>Walk through</h3><p>The output is start, ready, cleanup. The finally block runs on normal exit and when an exception escapes the with block.</p><h3>Practice</h3><p>Raise an exception inside the block and confirm cleanup still occurs; then remove the test exception.</p><div class="self-check"><h3>Check yourself</h3><p>Why use finally for cleanup?</p><details><summary>Show answer</summary><p>It runs when control leaves the block, even if an exception occurs.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="4"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-intermediate-6" data-lesson="5"><details><summary><span class="lesson-number">06</span><span>Async and await</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Asyncio schedules cooperative tasks: await yields control while an awaitable is pending. It is useful for concurrent I/O, but CPU-heavy work still blocks the event loop unless moved elsewhere.</p><h3>Example</h3><pre tabindex="0"><code>import asyncio
+
+async def task(name):
+    await asyncio.sleep(0.01)
+    return f&quot;Done: {name}&quot;
+
+async def main():
+    results = await asyncio.gather(task(&quot;A&quot;), task(&quot;B&quot;))
+    print(results)
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())</code></pre><h3>Walk through</h3><p>gather schedules both coroutines and returns their results in input order. sleep demonstrates a nonblocking wait, not a network request. asyncio.run belongs at the program boundary.</p><h3>Practice</h3><p>Add a third task and compare gather with awaiting tasks one at a time.</p><div class="self-check"><h3>Check yourself</h3><p>Does async automatically make CPU-bound code parallel?</p><details><summary>Show answer</summary><p>No. CPU-heavy code can block the event loop; use an appropriate executor or process.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="5"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-intermediate-7" data-lesson="6"><details><summary><span class="lesson-number">07</span><span>Modules and packaging</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A module is a Python file that can be imported. A package groups modules; a virtual environment isolates project dependencies. Pin or lock dependencies appropriately and review packages before installing.</p><h3>Example</h3><pre tabindex="0"><code># File: greet.py
+def greet(name):
+    return f&quot;Hello, {name}&quot;
+
+# File: main.py
+# from greet import greet
+# print(greet(&quot;Mita&quot;))</code></pre><h3>Walk through</h3><p>Save the first definition in greet.py and the uncommented import and print in main.py. Run python main.py from that folder. Do not name your file after a standard library module.</p><h3>Practice</h3><p>Create a small package with an __init__.py and import a function from it. Create a virtual environment using python -m venv .venv.</p><div class="self-check"><h3>Check yourself</h3><p>Why use a virtual environment?</p><details><summary>Show answer</summary><p>It isolates dependencies for this project from other Python environments.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="6"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-intermediate-8" data-lesson="7"><details><summary><span class="lesson-number">08</span><span>Files, JSON and CSV</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Use explicit UTF-8 text encoding and with blocks to close files. JSON represents structured data, while CSV stores rows. Validate data from untrusted sources and never deserialize untrusted pickle data.</p><h3>Example</h3><pre tabindex="0"><code>import csv
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory() as folder:
+    root = Path(folder)
+    (root / &quot;task.json&quot;).write_text(json.dumps({&quot;done&quot;: False}), encoding=&quot;utf-8&quot;)
+    with (root / &quot;tasks.csv&quot;).open(&quot;w&quot;, encoding=&quot;utf-8&quot;, newline=&quot;&quot;) as f:
+        writer = csv.DictWriter(f, fieldnames=[&quot;title&quot;, &quot;minutes&quot;])
+        writer.writeheader()
+        writer.writerow({&quot;title&quot;: &quot;Read&quot;, &quot;minutes&quot;: 20})
+    print(json.loads((root / &quot;task.json&quot;).read_text(encoding=&quot;utf-8&quot;)))
+    with (root / &quot;tasks.csv&quot;).open(encoding=&quot;utf-8&quot;, newline=&quot;&quot;) as f:
+        print(list(csv.DictReader(f)))</code></pre><h3>Walk through</h3><p>TemporaryDirectory removes its test files at exit. DictReader returns strings for CSV fields, so convert and validate numeric values explicitly.</p><h3>Practice</h3><p>Read the minutes field as an integer and handle a missing or invalid value.</p><div class="self-check"><h3>Check yourself</h3><p>Does CSV automatically preserve Python integer types?</p><details><summary>Show answer</summary><p>No. CSV fields are text; parse and validate types when reading.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-intermediate" data-index="7"> <span>Mark this lesson complete</span></label></div></details></section></div></article>
+<article class="advanced-course" id="python-backend" data-course="python-backend"><header><div><span class="advanced-kicker">PATH 02 · INTERMEDIATE</span><h2>Python Backend: APIs, Databases &amp; Deployment</h2><p><strong>Before you start:</strong> Python functions, HTTP basics and SQL basics.</p><p><strong>Practice setup:</strong> Use a virtual environment; install frameworks only from trusted package sources. Run servers locally, not with production secrets.</p></div><span class="course-progress" data-course-progress="python-backend">5 lessons</span></header><div class="advanced-lessons"><section class="advanced-lesson" id="python-backend-1" data-lesson="0"><details><summary><span class="lesson-number">01</span><span>FastAPI: request and validation</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>FastAPI uses Python types and Pydantic models to validate request data. A request is untrusted; validate values and return appropriate status codes.</p><h3>Example</h3><pre tabindex="0"><code>from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+
+class Task(BaseModel):
+    title: str = Field(min_length=1, max_length=100)
+
+@app.post(&quot;/tasks&quot;, status_code=201)
+def create_task(task: Task):
+    return {&quot;title&quot;: task.title}</code></pre><h3>Walk through</h3><p>Save as main.py, install fastapi and uvicorn in a virtual environment, then run uvicorn main:app. POST a JSON title. This example echoes data; it does not persist it.</p><h3>Practice</h3><p>Add a bounded minutes field and test a valid request and an invalid request.</p><div class="self-check"><h3>Check yourself</h3><p>What happens to an empty title?</p><details><summary>Show answer</summary><p>Validation rejects it before the handler processes the request.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-backend" data-index="0"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-backend-2" data-lesson="1"><details><summary><span class="lesson-number">02</span><span>Flask: routes and responses</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Flask maps HTTP routes to Python functions. Both Flask and FastAPI require a production server and secure configuration before public deployment.</p><h3>Example</h3><pre tabindex="0"><code>from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.get(&quot;/health&quot;)
+def health():
+    return jsonify(status=&quot;ok&quot;)</code></pre><h3>Walk through</h3><p>Install Flask, save as app.py and run flask --app app run for local development. GET /health returns a JSON status. Never expose the development debugger publicly.</p><h3>Practice</h3><p>Add GET /about returning a JSON service name; test both routes.</p><div class="self-check"><h3>Check yourself</h3><p>Is the built-in development server a production deployment?</p><details><summary>Show answer</summary><p>No. Use a supported production server and a reviewed production configuration.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-backend" data-index="1"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-backend-3" data-lesson="2"><details><summary><span class="lesson-number">03</span><span>SQLAlchemy: transactions and persistence</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>SQLAlchemy maps Python objects to database rows. Sessions manage units of work; commit saves changes and rollback discards an unsuccessful transaction.</p><h3>Example</h3><pre tabindex="0"><code>from sqlalchemy import create_engine, Integer, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+
+class Base(DeclarativeBase):
+    pass
+
+class Task(Base):
+    __tablename__ = &quot;tasks&quot;
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(100))
+
+engine = create_engine(&quot;sqlite:///:memory:&quot;)
+Base.metadata.create_all(engine)
+with Session(engine) as session:
+    session.add(Task(title=&quot;Read&quot;))
+    session.commit()
+    print(session.query(Task).first().title)</code></pre><h3>Walk through</h3><p>The in-memory database disappears when the process exits. The example prints Read. Production systems need migrations, persistent storage and connection management.</p><h3>Practice</h3><p>Insert a second task and query both; test what happens if you roll back before committing.</p><div class="self-check"><h3>Check yourself</h3><p>Why will these rows disappear after the program ends?</p><details><summary>Show answer</summary><p>sqlite:///:memory: uses a process-local in-memory database.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-backend" data-index="2"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-backend-4" data-lesson="3"><details><summary><span class="lesson-number">04</span><span>JWT authentication: verification boundaries</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A signed JWT can carry claims, but a signature is not encryption. Validate allowed algorithms, signature, expiry, issuer and audience; authenticate and authorize separately. Never place passwords or secrets in a token.</p><h3>Example</h3><pre tabindex="0"><code>import os
+import jwt
+
+def verify_token(token: str) -&gt; dict:
+    return jwt.decode(
+        token,
+        os.environ[&quot;JWT_VERIFY_KEY&quot;],
+        algorithms=[&quot;RS256&quot;],
+        audience=&quot;study-api&quot;,
+        issuer=&quot;https://issuer.example&quot;,
+        options={&quot;require&quot;: [&quot;exp&quot;, &quot;iat&quot;, &quot;iss&quot;, &quot;aud&quot;, &quot;sub&quot;]},
+    )</code></pre><h3>Walk through</h3><p>This is a verification function, not an issuer or login system. Install PyJWT with cryptography and supply a trusted public verification key. Catch verification errors at the API boundary and reject invalid tokens.</p><h3>Practice</h3><p>Write tests for expired tokens and wrong audience using test keys only. Decide how signing keys will rotate.</p><div class="self-check"><h3>Check yourself</h3><p>Does decoding a JWT without signature verification authenticate a user?</p><details><summary>Show answer</summary><p>No. Claims are untrusted until signature and required claims have been validated.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-backend" data-index="3"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="python-backend-5" data-lesson="4"><details><summary><span class="lesson-number">05</span><span>Deployment basics</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Deployment needs repeatable builds, configuration, durable storage, HTTPS, logging without secrets, backups and a rollback plan. Development commands and SQLite in memory do not provide a production service.</p><h3>Example</h3><pre tabindex="0"><code># Example: local smoke checks, not a production deployment
+python -m venv .venv
+# Activate the virtual environment for your OS.
+python -m pip install fastapi uvicorn
+uvicorn main:app --host 127.0.0.1 --port 8000</code></pre><h3>Walk through</h3><p>Confirm the app runs locally and check a health endpoint. For production, select a host, set environment variables securely, use persistent database storage, pin dependencies and monitor failures.</p><h3>Practice</h3><p>Write a deployment checklist including migrations, HTTPS, secrets, backup restoration and rollback.</p><div class="self-check"><h3>Check yourself</h3><p>Why not commit a production secret in source code?</p><details><summary>Show answer</summary><p>Repository history and logs may expose it; use the hosting provider’s secret management and rotate exposed secrets.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="python-backend" data-index="4"> <span>Mark this lesson complete</span></label></div></details></section></div></article>
+<article class="advanced-course" id="advanced-c" data-course="advanced-c"><header><div><span class="advanced-kicker">PATH 03 · INTERMEDIATE</span><h2>Advanced C: Memory, Structures &amp; Files</h2><p><strong>Before you start:</strong> C basics, pointers and functions.</p><p><strong>Practice setup:</strong> Compile examples locally with a C11 compiler and warnings enabled. Use sanitizers where available.</p></div><span class="course-progress" data-course-progress="advanced-c">3 lessons</span></header><div class="advanced-lessons"><section class="advanced-lesson" id="advanced-c-1" data-lesson="0"><details><summary><span class="lesson-number">01</span><span>Dynamic memory ownership</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>malloc allocates memory and may fail. Every successful allocation needs one matching free; after free the pointer must not be dereferenced. Check sizes and avoid integer overflow in real allocations.</p><h3>Example</h3><pre tabindex="0"><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+int main(void) {
+    size_t n = 3;
+    int *items = malloc(n * sizeof *items);
+    if (items == NULL) return 1;
+    for (size_t i = 0; i &lt; n; ++i) items[i] = (int)i;
+    printf(&quot;%d\n&quot;, items[2]);
+    free(items);
+    return 0;
+}</code></pre><h3>Walk through</h3><p>Compile with cc -std=c11 -Wall -Wextra -Werror. The program prints 2 and releases the allocation. Do not access items after free.</p><h3>Practice</h3><p>Use calloc and print three initialized values; use an address sanitizer if your compiler supports it.</p><div class="self-check"><h3>Check yourself</h3><p>What happens if allocated memory is never freed?</p><details><summary>Show answer</summary><p>It leaks until reclaimed by the environment, and repeated leaks can exhaust resources.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="advanced-c" data-index="0"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="advanced-c-2" data-lesson="1"><details><summary><span class="lesson-number">02</span><span>Structures and pointers</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A struct groups related values under one type. The -&gt; operator accesses a member through a pointer; it requires a valid pointer to an object.</p><h3>Example</h3><pre tabindex="0"><code>#include &lt;stdio.h&gt;
+typedef struct { int minutes; const char *topic; } Session;
+int main(void) {
+    Session s = {25, &quot;C&quot;};
+    Session *p = &amp;s;
+    printf(&quot;%s: %d\n&quot;, p-&gt;topic, p-&gt;minutes);
+    return 0;
+}</code></pre><h3>Walk through</h3><p>s owns its integer field and stores a pointer to a string literal. p points to the live local object. The output is C: 25.</p><h3>Practice</h3><p>Add a function accepting const Session * and printing its fields.</p><div class="self-check"><h3>Check yourself</h3><p>What does p-&gt;minutes mean?</p><details><summary>Show answer</summary><p>It is shorthand for (*p).minutes.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="advanced-c" data-index="1"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="advanced-c-3" data-lesson="2"><details><summary><span class="lesson-number">03</span><span>File I/O and errors</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>File operations can fail. Always check fopen and output results and close an opened stream. Text files and binary formats need explicit conventions for portability.</p><h3>Example</h3><pre tabindex="0"><code>#include &lt;stdio.h&gt;
+int main(void) {
+    FILE *file = tmpfile();
+    if (!file) return 1;
+    if (fputs(&quot;study\n&quot;, file) == EOF) { fclose(file); return 1; }
+    rewind(file);
+    char line[32];
+    if (fgets(line, sizeof line, file)) printf(&quot;%s&quot;, line);
+    if (fclose(file) == EOF) return 1;
+    return 0;
+}</code></pre><h3>Walk through</h3><p>tmpfile creates a temporary stream; the code writes, rewinds, reads a bounded line and closes it. The printed output is study.</p><h3>Practice</h3><p>Handle a read failure explicitly, and explain how to handle lines longer than the buffer.</p><div class="self-check"><h3>Check yourself</h3><p>Why check fopen or tmpfile before using the stream?</p><details><summary>Show answer</summary><p>Opening may fail, so a null FILE pointer must not be used.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="advanced-c" data-index="2"> <span>Mark this lesson complete</span></label></div></details></section></div></article>
+<article class="advanced-course" id="rust-intermediate" data-course="rust-intermediate"><header><div><span class="advanced-kicker">PATH 04 · INTERMEDIATE</span><h2>Rust Intermediate</h2><p><strong>Before you start:</strong> Rust basics: ownership, borrowing and functions.</p><p><strong>Practice setup:</strong> Use a local Rust toolchain and Cargo. Each snippet is a separate main.rs.</p></div><span class="course-progress" data-course-progress="rust-intermediate">3 lessons</span></header><div class="advanced-lessons"><section class="advanced-lesson" id="rust-intermediate-1" data-lesson="0"><details><summary><span class="lesson-number">01</span><span>Structs and methods</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Structs group named fields. An impl block defines methods, and &amp;self borrows a value without consuming it.</p><h3>Example</h3><pre tabindex="0"><code>struct Session { topic: String, minutes: u32 }
+impl Session {
+    fn describe(&amp;self) -&gt; String {
+        format!(&quot;{}: {}&quot;, self.topic, self.minutes)
+    }
+}
+fn main() {
+    let s = Session { topic: String::from(&quot;Rust&quot;), minutes: 25 };
+    println!(&quot;{}&quot;, s.describe());
+}</code></pre><h3>Walk through</h3><p>The method borrows s and formats its fields. It prints Rust: 25; s remains available afterward.</p><h3>Practice</h3><p>Add a method returning whether minutes is at least 30.</p><div class="self-check"><h3>Check yourself</h3><p>Why use &amp;self for describe?</p><details><summary>Show answer</summary><p>The method only needs a shared borrow and does not take ownership.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="rust-intermediate" data-index="0"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="rust-intermediate-2" data-lesson="1"><details><summary><span class="lesson-number">02</span><span>Traits and generic behavior</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A trait describes shared behavior. Generic bounds allow a function to accept different types that implement the required trait.</p><h3>Example</h3><pre tabindex="0"><code>trait Describe { fn describe(&amp;self) -&gt; String; }
+struct Topic { name: String }
+impl Describe for Topic {
+    fn describe(&amp;self) -&gt; String { self.name.clone() }
+}
+fn show&lt;T: Describe&gt;(item: &amp;T) { println!(&quot;{}&quot;, item.describe()); }
+fn main() { show(&amp;Topic { name: String::from(&quot;Rust&quot;) }); }</code></pre><h3>Walk through</h3><p>Topic implements Describe; show accepts a shared reference to any type satisfying that bound. The example prints Rust.</p><h3>Practice</h3><p>Implement Describe for a second struct and pass it to show.</p><div class="self-check"><h3>Check yourself</h3><p>What does T: Describe require?</p><details><summary>Show answer</summary><p>The type supplied for T must implement the Describe trait.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="rust-intermediate" data-index="1"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="rust-intermediate-3" data-lesson="2"><details><summary><span class="lesson-number">03</span><span>Lifetimes and modules</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Lifetime annotations describe relationships between references; they do not extend a value’s actual lifetime. Modules group related code and control visibility.</p><h3>Example</h3><pre tabindex="0"><code>mod text {
+    pub fn longer&lt;&#39;a&gt;(a: &amp;&#39;a str, b: &amp;&#39;a str) -&gt; &amp;&#39;a str {
+        if a.len() &gt;= b.len() { a } else { b }
+    }
+}
+fn main() {
+    let first = String::from(&quot;rust&quot;);
+    let second = String::from(&quot;go&quot;);
+    println!(&quot;{}&quot;, text::longer(&amp;first, &amp;second));
+}</code></pre><h3>Walk through</h3><p>The returned reference is valid only within the lifetime allowed by both inputs. pub makes longer accessible outside its module. The example prints rust.</p><h3>Practice</h3><p>Try an input with a shorter scope and examine the compiler’s lifetime error.</p><div class="self-check"><h3>Check yourself</h3><p>Does a lifetime annotation keep the strings alive?</p><details><summary>Show answer</summary><p>No. It describes a borrowing relationship; the values still follow their actual scopes.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="rust-intermediate" data-index="2"> <span>Mark this lesson complete</span></label></div></details></section></div></article>
+<article class="advanced-course" id="advanced-web" data-course="advanced-web"><header><div><span class="advanced-kicker">PATH 05 · INTERMEDIATE</span><h2>JavaScript &amp; React</h2><p><strong>Before you start:</strong> JavaScript basics, HTML and CSS.</p><p><strong>Practice setup:</strong> Run browser examples in a local page or browser console; React examples require a local React build setup.</p></div><span class="course-progress" data-course-progress="advanced-web">3 lessons</span></header><div class="advanced-lessons"><section class="advanced-lesson" id="advanced-web-1" data-lesson="0"><details><summary><span class="lesson-number">01</span><span>DOM events and delegation</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Events can bubble from a child to a parent. Delegation lets a parent handle interactions for multiple children, including ones added later. Treat user-supplied text as text, not HTML.</p><h3>Example</h3><pre tabindex="0"><code>&lt;ul id=&quot;tasks&quot;&gt;&lt;li&gt;&lt;button type=&quot;button&quot;&gt;Read&lt;/button&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;p id=&quot;status&quot;&gt;&lt;/p&gt;
+&lt;script&gt;
+document.querySelector(&quot;#tasks&quot;).addEventListener(&quot;click&quot;, (event) =&gt; {
+  const button = event.target.closest(&quot;button&quot;);
+  if (!button || !event.currentTarget.contains(button)) return;
+  document.querySelector(&quot;#status&quot;).textContent = `Selected: ${button.textContent}`;
+});
+&lt;/script&gt;</code></pre><h3>Walk through</h3><p>Place this in a local HTML file and click Read. The parent receives the bubbling click and safely sets textContent. This site’s sandbox may restrict scripts in previews.</p><h3>Practice</h3><p>Add another button dynamically and confirm the same parent handler handles it.</p><div class="self-check"><h3>Check yourself</h3><p>Why use textContent rather than innerHTML for an untrusted label?</p><details><summary>Show answer</summary><p>textContent treats the value as text instead of interpreting it as HTML.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="advanced-web" data-index="0"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="advanced-web-2" data-lesson="1"><details><summary><span class="lesson-number">02</span><span>Fetch, async and errors</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>fetch rejects for network errors, but HTTP 404 and 500 responses still resolve. Check response.ok, validate expected data and handle cancellation or failure in real applications.</p><h3>Example</h3><pre tabindex="0"><code>async function loadTasks() {
+  try {
+    const response = await fetch(&quot;/api/tasks&quot;);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const tasks = await response.json();
+    console.log(tasks);
+  } catch (error) {
+    console.error(&quot;Could not load tasks&quot;, error);
+  }
+}
+loadTasks();</code></pre><h3>Walk through</h3><p>This is a client snippet for an application that actually provides /api/tasks; it will not magically create an API. Run it against a same-origin test endpoint.</p><h3>Practice</h3><p>Show a loading state and a retry button in a real page, and validate that the returned data is an array.</p><div class="self-check"><h3>Check yourself</h3><p>Does fetch automatically reject an HTTP 404?</p><details><summary>Show answer</summary><p>No. Check response.ok or response.status to handle HTTP errors.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="advanced-web" data-index="1"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="advanced-web-3" data-lesson="2"><details><summary><span class="lesson-number">03</span><span>React state and components</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A React component describes UI from state. Calling a state setter schedules a re-render; when the next value depends on the previous one, use the functional updater.</p><h3>Example</h3><pre tabindex="0"><code>import { useState } from &quot;react&quot;;
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  return &lt;button onClick={() =&gt; setCount(previous =&gt; previous + 1)}&gt;
+    Study blocks: {count}
+  &lt;/button&gt;;
+}</code></pre><h3>Walk through</h3><p>Put this component in a React project created with a supported build tool. Each click increments count and React updates the button text. JSX requires a build setup.</p><h3>Practice</h3><p>Add a reset button and ensure both controls have clear labels.</p><div class="self-check"><h3>Check yourself</h3><p>Why use the functional state updater?</p><details><summary>Show answer</summary><p>It computes the new value from the previous state, avoiding reliance on a stale captured value.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="advanced-web" data-index="2"> <span>Mark this lesson complete</span></label></div></details></section></div></article>
+<article class="advanced-course" id="devops-practical" data-course="devops-practical"><header><div><span class="advanced-kicker">PATH 06 · INTERMEDIATE</span><h2>DevOps: Docker, Git &amp; Linux</h2><p><strong>Before you start:</strong> Basic terminal commands and Git commits.</p><p><strong>Practice setup:</strong> Use a disposable local repository and a trusted Docker installation. Review commands before running them.</p></div><span class="course-progress" data-course-progress="devops-practical">3 lessons</span></header><div class="advanced-lessons"><section class="advanced-lesson" id="devops-practical-1" data-lesson="0"><details><summary><span class="lesson-number">01</span><span>Docker basics</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>An image is a build artifact; a container is a running instance. Keep dependencies pinned, avoid secrets in images and run with least privilege where possible.</p><h3>Example</h3><pre tabindex="0"><code>FROM python:3.12-slim
+WORKDIR /app
+COPY hello.py .
+USER 65532:65532
+CMD [&quot;python&quot;, &quot;hello.py&quot;]</code></pre><h3>Walk through</h3><p>Create hello.py with print(&quot;Hello from a container&quot;), then build with docker build -t study-demo . and run docker run --rm study-demo. The Docker daemon and image download are required.</p><h3>Practice</h3><p>Change the message, rebuild and explain why changing the source does not alter an already-built image.</p><div class="self-check"><h3>Check yourself</h3><p>Does deleting a container automatically delete its image?</p><details><summary>Show answer</summary><p>No. A container and its image are separate resources.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="devops-practical" data-index="0"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="devops-practical-2" data-lesson="1"><details><summary><span class="lesson-number">02</span><span>Git rebase and cherry-pick</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Rebase replays commits onto a new base; cherry-pick applies selected commits. Both can create new commit IDs. Avoid rewriting shared history without coordination.</p><h3>Example</h3><pre tabindex="0"><code># In a disposable repository with an existing feature branch:
+git status
+git switch feature
+git rebase main
+# Resolve conflicts, then: git add &lt;resolved-file&gt; &amp;&amp; git rebase --continue
+# If needed: git rebase --abort
+# To copy one reviewed commit: git cherry-pick &lt;commit-id&gt;</code></pre><h3>Walk through</h3><p>Check that the working tree is clean. Read conflict markers carefully and run tests after resolving them. Replace placeholders with real local names; never paste them blindly.</p><h3>Practice</h3><p>Create two local branches in a practice repository, cherry-pick one commit and compare git log --oneline.</p><div class="self-check"><h3>Check yourself</h3><p>Why avoid rebasing a shared branch without agreement?</p><details><summary>Show answer</summary><p>Rewriting published commits can disrupt collaborators and require coordinated recovery.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="devops-practical" data-index="1"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="devops-practical-3" data-lesson="2"><details><summary><span class="lesson-number">03</span><span>Linux command line</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A shell combines commands, pipes and redirection. Paths and permissions matter. Use a disposable directory, inspect commands before execution and avoid running untrusted scripts.</p><h3>Example</h3><pre tabindex="0"><code>mkdir -p study-demo
+cd study-demo
+printf &#39;python\nrust\n&#39; &gt; topics.txt
+cat topics.txt
+grep -n &#39;rust&#39; topics.txt
+pwd</code></pre><h3>Walk through</h3><p>This creates a local practice file, prints it, finds rust with its line number and displays the working directory. &gt; overwrites an existing file of that name.</p><h3>Practice</h3><p>Use wc -l topics.txt and explain the result. Inspect a command with man or --help.</p><div class="self-check"><h3>Check yourself</h3><p>What does &gt; do if topics.txt already exists?</p><details><summary>Show answer</summary><p>It truncates and overwrites the file; use it only when that is intended.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="devops-practical" data-index="2"> <span>Mark this lesson complete</span></label></div></details></section></div></article>
+<article class="advanced-course" id="practical-ai" data-course="practical-ai"><header><div><span class="advanced-kicker">PATH 07 · INTERMEDIATE</span><h2>Practical Machine Learning &amp; Local LLMs</h2><p><strong>Before you start:</strong> Python basics; basic data and evaluation concepts.</p><p><strong>Practice setup:</strong> Use a virtual environment. ML requires scikit-learn; local LLM use requires a separately installed model runner and sufficient hardware.</p></div><span class="course-progress" data-course-progress="practical-ai">3 lessons</span></header><div class="advanced-lessons"><section class="advanced-lesson" id="practical-ai-1" data-lesson="0"><details><summary><span class="lesson-number">01</span><span>A small scikit-learn project</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>Split data before fitting, evaluate on held-out examples and avoid leaking test information into training. Small demonstrations are not reliable evidence of real-world model quality.</p><h3>Example</h3><pre tabindex="0"><code>from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+X, y = load_iris(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=42, stratify=y
+)
+model = LogisticRegression(max_iter=300)
+model.fit(X_train, y_train)
+print(&quot;accuracy:&quot;, accuracy_score(y_test, model.predict(X_test)))</code></pre><h3>Walk through</h3><p>Install scikit-learn in an isolated environment. The model fits on training rows and is scored on held-out rows. Do not tune repeatedly on the same test set and call it independent.</p><h3>Practice</h3><p>Add a confusion matrix; explain which classes the model confuses and why the sample is not a deployment evaluation.</p><div class="self-check"><h3>Check yourself</h3><p>Why split before fitting?</p><details><summary>Show answer</summary><p>To evaluate on examples that were not used to fit the model and reduce leakage.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="practical-ai" data-index="0"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="practical-ai-2" data-lesson="1"><details><summary><span class="lesson-number">02</span><span>Prompt engineering and evaluation</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A useful prompt states a task, context, constraints and output format. Generated text can be wrong or reveal sensitive information; evaluate against reliable evidence and protect private data.</p><h3>Example</h3><pre tabindex="0"><code>Task: Explain a Python list comprehension to a beginner.
+Context: The reader knows for loops.
+Constraints: Use one short example; do not invent benchmark results.
+Output: Explanation, example, and one practice question.</code></pre><h3>Walk through</h3><p>Compare the output with a reference and run the code example independently. Keep an evaluation set of varied prompts and document failures rather than judging one polished response.</p><h3>Practice</h3><p>Revise the prompt to request a counterexample, then verify both examples with Python.</p><div class="self-check"><h3>Check yourself</h3><p>Does a detailed prompt guarantee a correct answer?</p><details><summary>Show answer</summary><p>No. Verify important claims and test generated code independently.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="practical-ai" data-index="1"> <span>Mark this lesson complete</span></label></div></details></section><section class="advanced-lesson" id="practical-ai-3" data-lesson="2"><details><summary><span class="lesson-number">03</span><span>Using a local language model safely</span></summary><div class="advanced-lesson-body"><h3>Understand</h3><p>A local model runner executes a downloaded model on your device; performance and privacy depend on configuration, model source and hardware. Local execution does not make output automatically trustworthy.</p><h3>Example</h3><pre tabindex="0"><code># Example using Ollama, installed separately.
+# Choose a model you have reviewed and installed according to its license.
+ollama list
+# ollama run &lt;installed-model-name&gt;</code></pre><h3>Walk through</h3><p>Install and configure your chosen runner using its official documentation. List available models, replace the placeholder with one you explicitly installed, and evaluate its answer. No model is bundled with this site.</p><h3>Practice</h3><p>Compare two prompts on the same harmless task. Record hardware limits, model version, output differences and verification steps.</p><div class="self-check"><h3>Check yourself</h3><p>Is every local model output automatically accurate or safe?</p><details><summary>Show answer</summary><p>No. Outputs can still be incorrect or harmful, and local setup may expose network services if configured unsafely.</p></details></div><label class="advanced-done" hidden><input type="checkbox" data-complete="practical-ai" data-index="2"> <span>Mark this lesson complete</span></label></div></details></section></div></article></div><div class="advanced-footer"><p>Practice responsibly. External tools, model downloads and deployment may require internet access, accounts or resources. Never use real secrets in learning examples.</p><a href="../index.html#courses">← Return to beginner courses</a></div></div></main><noscript><p class="advanced-wrap">JavaScript is optional for reading; progress and search require it.</p></noscript></body></html>

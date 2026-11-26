@@ -1,0 +1,310 @@
+[
+  {
+    "id": "python-intermediate",
+    "title": "Python Intermediate & Advanced",
+    "prerequisite": "Python basics: variables, loops and functions.",
+    "environment": "Use Python 3.11+ in a local virtual environment. Examples are independent files.",
+    "lessons": [
+      {
+        "title": "Classes and instances",
+        "concept": "A class defines behavior and an instance holds its own state. Methods receive the instance as self; initializing a new object calls __init__.",
+        "code": "class StudySession:\n    def __init__(self, topic, minutes):\n        self.topic = topic\n        self.minutes = minutes\n\n    def describe(self):\n        return f\"{self.topic}: {self.minutes} minutes\"\n\nsession = StudySession(\"Python\", 25)\nprint(session.describe())",
+        "walkthrough": "Create the object, trace the two attributes, then call describe. The result is Python: 25 minutes. Each new instance has its own attributes.",
+        "practice": "Create two sessions and print their descriptions. Reject negative minutes in the initializer.",
+        "question": "Where does self.minutes live?",
+        "answer": "On the instance referred to by self; it is not automatically shared by every instance."
+      },
+      {
+        "title": "Inheritance and magic methods",
+        "concept": "Inheritance lets a subclass reuse and extend a base class. Special methods such as __str__ define how objects behave with Python operations; prefer composition when inheritance does not represent a real is-a relationship.",
+        "code": "class Task:\n    def __init__(self, title):\n        self.title = title\n\n    def __str__(self):\n        return self.title\n\nclass TimedTask(Task):\n    def __init__(self, title, minutes):\n        super().__init__(title)\n        self.minutes = minutes\n\n    def __str__(self):\n        return f\"{super().__str__()} ({self.minutes} min)\"\n\nprint(TimedTask(\"Read\", 20))",
+        "walkthrough": "super().__init__ initializes the inherited title. print calls the overridden __str__, which includes the base string and duration.",
+        "practice": "Add a method that returns hours as a number; test zero and a positive duration.",
+        "question": "What invokes __str__ here?",
+        "answer": "print converts the object to text using its __str__ method."
+      },
+      {
+        "title": "Decorators",
+        "concept": "A decorator accepts a callable and returns a replacement callable. functools.wraps preserves useful metadata; decorators run when the function definition is evaluated.",
+        "code": "from functools import wraps\n\ndef trace(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        print(\"Calling\", func.__name__)\n        return func(*args, **kwargs)\n    return wrapper\n\n@trace\ndef add(a, b):\n    return a + b\n\nprint(add(2, 3))",
+        "walkthrough": "@trace is equivalent to rebinding add to trace(add). The wrapper prints a message, forwards the arguments and returns 5. Avoid logging sensitive arguments.",
+        "practice": "Write a decorator that prints Done after a successful function call, and make sure it returns the original result.",
+        "question": "Why return func(*args, **kwargs)?",
+        "answer": "It forwards the wrapped function’s result to the caller instead of discarding it."
+      },
+      {
+        "title": "Generators and lazy iteration",
+        "concept": "A generator produces values on demand with yield. It preserves local state between iterations, which can avoid building a large list, but an exhausted generator cannot simply be reused.",
+        "code": "def study_blocks(count):\n    for number in range(1, count + 1):\n        yield f\"Block {number}\"\n\nblocks = study_blocks(2)\nfor block in blocks:\n    print(block)",
+        "walkthrough": "Calling study_blocks creates a generator; the loop requests values one at a time. It prints Block 1 and Block 2. Iteration stops when the function ends.",
+        "practice": "Change the function to yield a pair of block number and minutes, then test count 0.",
+        "question": "What happens when the generator is exhausted?",
+        "answer": "Further iteration produces no values; create a new generator if you need another pass."
+      },
+      {
+        "title": "Context managers",
+        "concept": "A with statement manages a resource and runs cleanup when the block exits, including on exceptions. contextmanager allows a generator with a yield to define setup and cleanup.",
+        "code": "from contextlib import contextmanager\n\n@contextmanager\ndef session():\n    print(\"start\")\n    try:\n        yield \"ready\"\n    finally:\n        print(\"cleanup\")\n\nwith session() as state:\n    print(state)",
+        "walkthrough": "The output is start, ready, cleanup. The finally block runs on normal exit and when an exception escapes the with block.",
+        "practice": "Raise an exception inside the block and confirm cleanup still occurs; then remove the test exception.",
+        "question": "Why use finally for cleanup?",
+        "answer": "It runs when control leaves the block, even if an exception occurs."
+      },
+      {
+        "title": "Async and await",
+        "concept": "Asyncio schedules cooperative tasks: await yields control while an awaitable is pending. It is useful for concurrent I/O, but CPU-heavy work still blocks the event loop unless moved elsewhere.",
+        "code": "import asyncio\n\nasync def task(name):\n    await asyncio.sleep(0.01)\n    return f\"Done: {name}\"\n\nasync def main():\n    results = await asyncio.gather(task(\"A\"), task(\"B\"))\n    print(results)\n\nif __name__ == \"__main__\":\n    asyncio.run(main())",
+        "walkthrough": "gather schedules both coroutines and returns their results in input order. sleep demonstrates a nonblocking wait, not a network request. asyncio.run belongs at the program boundary.",
+        "practice": "Add a third task and compare gather with awaiting tasks one at a time.",
+        "question": "Does async automatically make CPU-bound code parallel?",
+        "answer": "No. CPU-heavy code can block the event loop; use an appropriate executor or process."
+      },
+      {
+        "title": "Modules and packaging",
+        "concept": "A module is a Python file that can be imported. A package groups modules; a virtual environment isolates project dependencies. Pin or lock dependencies appropriately and review packages before installing.",
+        "code": "# File: greet.py\ndef greet(name):\n    return f\"Hello, {name}\"\n\n# File: main.py\n# from greet import greet\n# print(greet(\"Mita\"))",
+        "walkthrough": "Save the first definition in greet.py and the uncommented import and print in main.py. Run python main.py from that folder. Do not name your file after a standard library module.",
+        "practice": "Create a small package with an __init__.py and import a function from it. Create a virtual environment using python -m venv .venv.",
+        "question": "Why use a virtual environment?",
+        "answer": "It isolates dependencies for this project from other Python environments."
+      },
+      {
+        "title": "Files, JSON and CSV",
+        "concept": "Use explicit UTF-8 text encoding and with blocks to close files. JSON represents structured data, while CSV stores rows. Validate data from untrusted sources and never deserialize untrusted pickle data.",
+        "code": "import csv\nimport json\nfrom pathlib import Path\nfrom tempfile import TemporaryDirectory\n\nwith TemporaryDirectory() as folder:\n    root = Path(folder)\n    (root / \"task.json\").write_text(json.dumps({\"done\": False}), encoding=\"utf-8\")\n    with (root / \"tasks.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:\n        writer = csv.DictWriter(f, fieldnames=[\"title\", \"minutes\"])\n        writer.writeheader()\n        writer.writerow({\"title\": \"Read\", \"minutes\": 20})\n    print(json.loads((root / \"task.json\").read_text(encoding=\"utf-8\")))\n    with (root / \"tasks.csv\").open(encoding=\"utf-8\", newline=\"\") as f:\n        print(list(csv.DictReader(f)))",
+        "walkthrough": "TemporaryDirectory removes its test files at exit. DictReader returns strings for CSV fields, so convert and validate numeric values explicitly.",
+        "practice": "Read the minutes field as an integer and handle a missing or invalid value.",
+        "question": "Does CSV automatically preserve Python integer types?",
+        "answer": "No. CSV fields are text; parse and validate types when reading."
+      }
+    ]
+  },
+  {
+    "id": "python-backend",
+    "title": "Python Backend: APIs, Databases & Deployment",
+    "prerequisite": "Python functions, HTTP basics and SQL basics.",
+    "environment": "Use a virtual environment; install frameworks only from trusted package sources. Run servers locally, not with production secrets.",
+    "lessons": [
+      {
+        "title": "FastAPI: request and validation",
+        "concept": "FastAPI uses Python types and Pydantic models to validate request data. A request is untrusted; validate values and return appropriate status codes.",
+        "code": "from fastapi import FastAPI\nfrom pydantic import BaseModel, Field\n\napp = FastAPI()\n\nclass Task(BaseModel):\n    title: str = Field(min_length=1, max_length=100)\n\n@app.post(\"/tasks\", status_code=201)\ndef create_task(task: Task):\n    return {\"title\": task.title}",
+        "walkthrough": "Save as main.py, install fastapi and uvicorn in a virtual environment, then run uvicorn main:app. POST a JSON title. This example echoes data; it does not persist it.",
+        "practice": "Add a bounded minutes field and test a valid request and an invalid request.",
+        "question": "What happens to an empty title?",
+        "answer": "Validation rejects it before the handler processes the request."
+      },
+      {
+        "title": "Flask: routes and responses",
+        "concept": "Flask maps HTTP routes to Python functions. Both Flask and FastAPI require a production server and secure configuration before public deployment.",
+        "code": "from flask import Flask, jsonify\n\napp = Flask(__name__)\n\n@app.get(\"/health\")\ndef health():\n    return jsonify(status=\"ok\")",
+        "walkthrough": "Install Flask, save as app.py and run flask --app app run for local development. GET /health returns a JSON status. Never expose the development debugger publicly.",
+        "practice": "Add GET /about returning a JSON service name; test both routes.",
+        "question": "Is the built-in development server a production deployment?",
+        "answer": "No. Use a supported production server and a reviewed production configuration."
+      },
+      {
+        "title": "SQLAlchemy: transactions and persistence",
+        "concept": "SQLAlchemy maps Python objects to database rows. Sessions manage units of work; commit saves changes and rollback discards an unsuccessful transaction.",
+        "code": "from sqlalchemy import create_engine, Integer, String\nfrom sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session\n\nclass Base(DeclarativeBase):\n    pass\n\nclass Task(Base):\n    __tablename__ = \"tasks\"\n    id: Mapped[int] = mapped_column(Integer, primary_key=True)\n    title: Mapped[str] = mapped_column(String(100))\n\nengine = create_engine(\"sqlite:///:memory:\")\nBase.metadata.create_all(engine)\nwith Session(engine) as session:\n    session.add(Task(title=\"Read\"))\n    session.commit()\n    print(session.query(Task).first().title)",
+        "walkthrough": "The in-memory database disappears when the process exits. The example prints Read. Production systems need migrations, persistent storage and connection management.",
+        "practice": "Insert a second task and query both; test what happens if you roll back before committing.",
+        "question": "Why will these rows disappear after the program ends?",
+        "answer": "sqlite:///:memory: uses a process-local in-memory database."
+      },
+      {
+        "title": "JWT authentication: verification boundaries",
+        "concept": "A signed JWT can carry claims, but a signature is not encryption. Validate allowed algorithms, signature, expiry, issuer and audience; authenticate and authorize separately. Never place passwords or secrets in a token.",
+        "code": "import os\nimport jwt\n\ndef verify_token(token: str) -> dict:\n    return jwt.decode(\n        token,\n        os.environ[\"JWT_VERIFY_KEY\"],\n        algorithms=[\"RS256\"],\n        audience=\"study-api\",\n        issuer=\"https://issuer.example\",\n        options={\"require\": [\"exp\", \"iat\", \"iss\", \"aud\", \"sub\"]},\n    )",
+        "walkthrough": "This is a verification function, not an issuer or login system. Install PyJWT with cryptography and supply a trusted public verification key. Catch verification errors at the API boundary and reject invalid tokens.",
+        "practice": "Write tests for expired tokens and wrong audience using test keys only. Decide how signing keys will rotate.",
+        "question": "Does decoding a JWT without signature verification authenticate a user?",
+        "answer": "No. Claims are untrusted until signature and required claims have been validated."
+      },
+      {
+        "title": "Deployment basics",
+        "concept": "Deployment needs repeatable builds, configuration, durable storage, HTTPS, logging without secrets, backups and a rollback plan. Development commands and SQLite in memory do not provide a production service.",
+        "code": "# Example: local smoke checks, not a production deployment\npython -m venv .venv\n# Activate the virtual environment for your OS.\npython -m pip install fastapi uvicorn\nuvicorn main:app --host 127.0.0.1 --port 8000",
+        "walkthrough": "Confirm the app runs locally and check a health endpoint. For production, select a host, set environment variables securely, use persistent database storage, pin dependencies and monitor failures.",
+        "practice": "Write a deployment checklist including migrations, HTTPS, secrets, backup restoration and rollback.",
+        "question": "Why not commit a production secret in source code?",
+        "answer": "Repository history and logs may expose it; use the hosting provider’s secret management and rotate exposed secrets."
+      }
+    ]
+  },
+  {
+    "id": "advanced-c",
+    "title": "Advanced C: Memory, Structures & Files",
+    "prerequisite": "C basics, pointers and functions.",
+    "environment": "Compile examples locally with a C11 compiler and warnings enabled. Use sanitizers where available.",
+    "lessons": [
+      {
+        "title": "Dynamic memory ownership",
+        "concept": "malloc allocates memory and may fail. Every successful allocation needs one matching free; after free the pointer must not be dereferenced. Check sizes and avoid integer overflow in real allocations.",
+        "code": "#include <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    size_t n = 3;\n    int *items = malloc(n * sizeof *items);\n    if (items == NULL) return 1;\n    for (size_t i = 0; i < n; ++i) items[i] = (int)i;\n    printf(\"%d\\n\", items[2]);\n    free(items);\n    return 0;\n}",
+        "walkthrough": "Compile with cc -std=c11 -Wall -Wextra -Werror. The program prints 2 and releases the allocation. Do not access items after free.",
+        "practice": "Use calloc and print three initialized values; use an address sanitizer if your compiler supports it.",
+        "question": "What happens if allocated memory is never freed?",
+        "answer": "It leaks until reclaimed by the environment, and repeated leaks can exhaust resources."
+      },
+      {
+        "title": "Structures and pointers",
+        "concept": "A struct groups related values under one type. The -> operator accesses a member through a pointer; it requires a valid pointer to an object.",
+        "code": "#include <stdio.h>\ntypedef struct { int minutes; const char *topic; } Session;\nint main(void) {\n    Session s = {25, \"C\"};\n    Session *p = &s;\n    printf(\"%s: %d\\n\", p->topic, p->minutes);\n    return 0;\n}",
+        "walkthrough": "s owns its integer field and stores a pointer to a string literal. p points to the live local object. The output is C: 25.",
+        "practice": "Add a function accepting const Session * and printing its fields.",
+        "question": "What does p->minutes mean?",
+        "answer": "It is shorthand for (*p).minutes."
+      },
+      {
+        "title": "File I/O and errors",
+        "concept": "File operations can fail. Always check fopen and output results and close an opened stream. Text files and binary formats need explicit conventions for portability.",
+        "code": "#include <stdio.h>\nint main(void) {\n    FILE *file = tmpfile();\n    if (!file) return 1;\n    if (fputs(\"study\\n\", file) == EOF) { fclose(file); return 1; }\n    rewind(file);\n    char line[32];\n    if (fgets(line, sizeof line, file)) printf(\"%s\", line);\n    if (fclose(file) == EOF) return 1;\n    return 0;\n}",
+        "walkthrough": "tmpfile creates a temporary stream; the code writes, rewinds, reads a bounded line and closes it. The printed output is study.",
+        "practice": "Handle a read failure explicitly, and explain how to handle lines longer than the buffer.",
+        "question": "Why check fopen or tmpfile before using the stream?",
+        "answer": "Opening may fail, so a null FILE pointer must not be used."
+      }
+    ]
+  },
+  {
+    "id": "rust-intermediate",
+    "title": "Rust Intermediate",
+    "prerequisite": "Rust basics: ownership, borrowing and functions.",
+    "environment": "Use a local Rust toolchain and Cargo. Each snippet is a separate main.rs.",
+    "lessons": [
+      {
+        "title": "Structs and methods",
+        "concept": "Structs group named fields. An impl block defines methods, and &self borrows a value without consuming it.",
+        "code": "struct Session { topic: String, minutes: u32 }\nimpl Session {\n    fn describe(&self) -> String {\n        format!(\"{}: {}\", self.topic, self.minutes)\n    }\n}\nfn main() {\n    let s = Session { topic: String::from(\"Rust\"), minutes: 25 };\n    println!(\"{}\", s.describe());\n}",
+        "walkthrough": "The method borrows s and formats its fields. It prints Rust: 25; s remains available afterward.",
+        "practice": "Add a method returning whether minutes is at least 30.",
+        "question": "Why use &self for describe?",
+        "answer": "The method only needs a shared borrow and does not take ownership."
+      },
+      {
+        "title": "Traits and generic behavior",
+        "concept": "A trait describes shared behavior. Generic bounds allow a function to accept different types that implement the required trait.",
+        "code": "trait Describe { fn describe(&self) -> String; }\nstruct Topic { name: String }\nimpl Describe for Topic {\n    fn describe(&self) -> String { self.name.clone() }\n}\nfn show<T: Describe>(item: &T) { println!(\"{}\", item.describe()); }\nfn main() { show(&Topic { name: String::from(\"Rust\") }); }",
+        "walkthrough": "Topic implements Describe; show accepts a shared reference to any type satisfying that bound. The example prints Rust.",
+        "practice": "Implement Describe for a second struct and pass it to show.",
+        "question": "What does T: Describe require?",
+        "answer": "The type supplied for T must implement the Describe trait."
+      },
+      {
+        "title": "Lifetimes and modules",
+        "concept": "Lifetime annotations describe relationships between references; they do not extend a value’s actual lifetime. Modules group related code and control visibility.",
+        "code": "mod text {\n    pub fn longer<'a>(a: &'a str, b: &'a str) -> &'a str {\n        if a.len() >= b.len() { a } else { b }\n    }\n}\nfn main() {\n    let first = String::from(\"rust\");\n    let second = String::from(\"go\");\n    println!(\"{}\", text::longer(&first, &second));\n}",
+        "walkthrough": "The returned reference is valid only within the lifetime allowed by both inputs. pub makes longer accessible outside its module. The example prints rust.",
+        "practice": "Try an input with a shorter scope and examine the compiler’s lifetime error.",
+        "question": "Does a lifetime annotation keep the strings alive?",
+        "answer": "No. It describes a borrowing relationship; the values still follow their actual scopes."
+      }
+    ]
+  },
+  {
+    "id": "advanced-web",
+    "title": "JavaScript & React",
+    "prerequisite": "JavaScript basics, HTML and CSS.",
+    "environment": "Run browser examples in a local page or browser console; React examples require a local React build setup.",
+    "lessons": [
+      {
+        "title": "DOM events and delegation",
+        "concept": "Events can bubble from a child to a parent. Delegation lets a parent handle interactions for multiple children, including ones added later. Treat user-supplied text as text, not HTML.",
+        "code": "<ul id=\"tasks\"><li><button type=\"button\">Read</button></li></ul>\n<p id=\"status\"></p>\n<script>\ndocument.querySelector(\"#tasks\").addEventListener(\"click\", (event) => {\n  const button = event.target.closest(\"button\");\n  if (!button || !event.currentTarget.contains(button)) return;\n  document.querySelector(\"#status\").textContent = `Selected: ${button.textContent}`;\n});\n</script>",
+        "walkthrough": "Place this in a local HTML file and click Read. The parent receives the bubbling click and safely sets textContent. This site’s sandbox may restrict scripts in previews.",
+        "practice": "Add another button dynamically and confirm the same parent handler handles it.",
+        "question": "Why use textContent rather than innerHTML for an untrusted label?",
+        "answer": "textContent treats the value as text instead of interpreting it as HTML."
+      },
+      {
+        "title": "Fetch, async and errors",
+        "concept": "fetch rejects for network errors, but HTTP 404 and 500 responses still resolve. Check response.ok, validate expected data and handle cancellation or failure in real applications.",
+        "code": "async function loadTasks() {\n  try {\n    const response = await fetch(\"/api/tasks\");\n    if (!response.ok) throw new Error(`HTTP ${response.status}`);\n    const tasks = await response.json();\n    console.log(tasks);\n  } catch (error) {\n    console.error(\"Could not load tasks\", error);\n  }\n}\nloadTasks();",
+        "walkthrough": "This is a client snippet for an application that actually provides /api/tasks; it will not magically create an API. Run it against a same-origin test endpoint.",
+        "practice": "Show a loading state and a retry button in a real page, and validate that the returned data is an array.",
+        "question": "Does fetch automatically reject an HTTP 404?",
+        "answer": "No. Check response.ok or response.status to handle HTTP errors."
+      },
+      {
+        "title": "React state and components",
+        "concept": "A React component describes UI from state. Calling a state setter schedules a re-render; when the next value depends on the previous one, use the functional updater.",
+        "code": "import { useState } from \"react\";\n\nexport default function Counter() {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => setCount(previous => previous + 1)}>\n    Study blocks: {count}\n  </button>;\n}",
+        "walkthrough": "Put this component in a React project created with a supported build tool. Each click increments count and React updates the button text. JSX requires a build setup.",
+        "practice": "Add a reset button and ensure both controls have clear labels.",
+        "question": "Why use the functional state updater?",
+        "answer": "It computes the new value from the previous state, avoiding reliance on a stale captured value."
+      }
+    ]
+  },
+  {
+    "id": "devops-practical",
+    "title": "DevOps: Docker, Git & Linux",
+    "prerequisite": "Basic terminal commands and Git commits.",
+    "environment": "Use a disposable local repository and a trusted Docker installation. Review commands before running them.",
+    "lessons": [
+      {
+        "title": "Docker basics",
+        "concept": "An image is a build artifact; a container is a running instance. Keep dependencies pinned, avoid secrets in images and run with least privilege where possible.",
+        "code": "FROM python:3.12-slim\nWORKDIR /app\nCOPY hello.py .\nUSER 65532:65532\nCMD [\"python\", \"hello.py\"]",
+        "walkthrough": "Create hello.py with print(\"Hello from a container\"), then build with docker build -t study-demo . and run docker run --rm study-demo. The Docker daemon and image download are required.",
+        "practice": "Change the message, rebuild and explain why changing the source does not alter an already-built image.",
+        "question": "Does deleting a container automatically delete its image?",
+        "answer": "No. A container and its image are separate resources."
+      },
+      {
+        "title": "Git rebase and cherry-pick",
+        "concept": "Rebase replays commits onto a new base; cherry-pick applies selected commits. Both can create new commit IDs. Avoid rewriting shared history without coordination.",
+        "code": "# In a disposable repository with an existing feature branch:\ngit status\ngit switch feature\ngit rebase main\n# Resolve conflicts, then: git add <resolved-file> && git rebase --continue\n# If needed: git rebase --abort\n# To copy one reviewed commit: git cherry-pick <commit-id>",
+        "walkthrough": "Check that the working tree is clean. Read conflict markers carefully and run tests after resolving them. Replace placeholders with real local names; never paste them blindly.",
+        "practice": "Create two local branches in a practice repository, cherry-pick one commit and compare git log --oneline.",
+        "question": "Why avoid rebasing a shared branch without agreement?",
+        "answer": "Rewriting published commits can disrupt collaborators and require coordinated recovery."
+      },
+      {
+        "title": "Linux command line",
+        "concept": "A shell combines commands, pipes and redirection. Paths and permissions matter. Use a disposable directory, inspect commands before execution and avoid running untrusted scripts.",
+        "code": "mkdir -p study-demo\ncd study-demo\nprintf 'python\\nrust\\n' > topics.txt\ncat topics.txt\ngrep -n 'rust' topics.txt\npwd",
+        "walkthrough": "This creates a local practice file, prints it, finds rust with its line number and displays the working directory. > overwrites an existing file of that name.",
+        "practice": "Use wc -l topics.txt and explain the result. Inspect a command with man or --help.",
+        "question": "What does > do if topics.txt already exists?",
+        "answer": "It truncates and overwrites the file; use it only when that is intended."
+      }
+    ]
+  },
+  {
+    "id": "practical-ai",
+    "title": "Practical Machine Learning & Local LLMs",
+    "prerequisite": "Python basics; basic data and evaluation concepts.",
+    "environment": "Use a virtual environment. ML requires scikit-learn; local LLM use requires a separately installed model runner and sufficient hardware.",
+    "lessons": [
+      {
+        "title": "A small scikit-learn project",
+        "concept": "Split data before fitting, evaluate on held-out examples and avoid leaking test information into training. Small demonstrations are not reliable evidence of real-world model quality.",
+        "code": "from sklearn.datasets import load_iris\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import accuracy_score\n\nX, y = load_iris(return_X_y=True)\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.25, random_state=42, stratify=y\n)\nmodel = LogisticRegression(max_iter=300)\nmodel.fit(X_train, y_train)\nprint(\"accuracy:\", accuracy_score(y_test, model.predict(X_test)))",
+        "walkthrough": "Install scikit-learn in an isolated environment. The model fits on training rows and is scored on held-out rows. Do not tune repeatedly on the same test set and call it independent.",
+        "practice": "Add a confusion matrix; explain which classes the model confuses and why the sample is not a deployment evaluation.",
+        "question": "Why split before fitting?",
+        "answer": "To evaluate on examples that were not used to fit the model and reduce leakage."
+      },
+      {
+        "title": "Prompt engineering and evaluation",
+        "concept": "A useful prompt states a task, context, constraints and output format. Generated text can be wrong or reveal sensitive information; evaluate against reliable evidence and protect private data.",
+        "code": "Task: Explain a Python list comprehension to a beginner.\nContext: The reader knows for loops.\nConstraints: Use one short example; do not invent benchmark results.\nOutput: Explanation, example, and one practice question.",
+        "walkthrough": "Compare the output with a reference and run the code example independently. Keep an evaluation set of varied prompts and document failures rather than judging one polished response.",
+        "practice": "Revise the prompt to request a counterexample, then verify both examples with Python.",
+        "question": "Does a detailed prompt guarantee a correct answer?",
+        "answer": "No. Verify important claims and test generated code independently."
+      },
+      {
+        "title": "Using a local language model safely",
+        "concept": "A local model runner executes a downloaded model on your device; performance and privacy depend on configuration, model source and hardware. Local execution does not make output automatically trustworthy.",
+        "code": "# Example using Ollama, installed separately.\n# Choose a model you have reviewed and installed according to its license.\nollama list\n# ollama run <installed-model-name>",
+        "walkthrough": "Install and configure your chosen runner using its official documentation. List available models, replace the placeholder with one you explicitly installed, and evaluate its answer. No model is bundled with this site.",
+        "practice": "Compare two prompts on the same harmless task. Record hardware limits, model version, output differences and verification steps.",
+        "question": "Is every local model output automatically accurate or safe?",
+        "answer": "No. Outputs can still be incorrect or harmful, and local setup may expose network services if configured unsafely."
+      }
+    ]
+  }
+]
