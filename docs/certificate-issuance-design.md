@@ -43,4 +43,7 @@ Before implementation/release:
    Update privacy and terms to describe public data, retention and third-party
    sharing. Verify that the live URL works independently in a fresh browser.
 
-No real personal data or tokens should be used with `prototype/cloudflare/`.
+The local-only prototype now permits test issuance for the intermediate paths
+and the programme label; it still does not check completion or freeze programme
+membership, and is not production-ready. No real personal data or tokens should
+be used with `prototype/cloudflare/`.

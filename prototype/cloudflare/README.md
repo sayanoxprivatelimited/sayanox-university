@@ -25,7 +25,9 @@ account or paid service. It demonstrates:
   reports only that this local prototype created the record. It does not prove
   identity, completion, mastery, proctoring or accreditation. Anyone with a test
   key can request a record; there is **no assessment**. Record name and course
-  are public to anyone with the ID. Deleting the test account removes its backup,
+  are public to anyone with the ID. Test awards also include each of the seven
+  intermediate paths and an all-path programme label. The API accepts a
+  self-reported claim and does not check completion or freeze curriculum versions. Deleting the test account removes its backup,
   token and records. Deletion from future real systems would also need backup and
   retention procedures.
 
@@ -51,7 +53,7 @@ machine**. All data is disposable test data:
 | `POST /api/dev/accounts` | none | Create throwaway account; one-time `token` |
 | `GET /api/dev/backup` | `Authorization: Bearer <token>` | Current `revision` and backup or `null` |
 | `PUT /api/dev/backup` | bearer; JSON `{ "revision": 0, "backup": { "format": "sayanox-learning-backup", "version": 1, "data": {} } }` | New revision, or 409 if stale |
-| `POST /api/dev/certificates` | bearer; JSON `{ "studentName": "Test Student", "courseId": "python", "publicConsent": true }` | Local public record ID (maximum three per account) |
+| `POST /api/dev/certificates` | bearer; JSON `{ "studentName": "Test Student", "courseId": "python", "publicConsent": true }` | Local public record ID (maximum twelve per account) |
 | `GET /api/dev/certificates/SUP-...` | none | Public test record and its limitations |
 | `DELETE /api/dev/account` | bearer | Remove local account and test records |
 

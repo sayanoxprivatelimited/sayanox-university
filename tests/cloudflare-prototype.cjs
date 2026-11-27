@@ -52,7 +52,9 @@ const db = {prepare:sql => new Statement(sql), async batch(statements) { databas
  const publicRecord = await call('/api/dev/certificates/'+cert.json.id);
  assert.equal(publicRecord.json.studentName,'<script>alert(1)</script>'); assert.match(publicRecord.json.notice,/does not verify identity/);
  assert.equal(publicRecord.json.course,'Python Basics'); assert.equal(publicRecord.json.token,undefined);
- for (let i=0;i<2;i++) assert.equal((await call('/api/dev/certificates',{method:'POST',token,body:{studentName:'Person',courseId:'web',publicConsent:true}})).status,201);
+ for (const courseId of ['python-intermediate','intermediate-programme-v1']) { const issued = await call('/api/dev/certificates',{method:'POST',token:token2,body:{studentName:'Test learner',courseId,publicConsent:true}}); assert.equal(issued.status,201); const record = await call('/api/dev/certificates/'+issued.json.id); assert.equal(record.status,200); assert.match(record.json.notice,/does not verify identity, completion/); assert.match(record.json.course,/Python Intermediate|Intermediate Learning Programme/); }
+
+ for (let i=0;i<11;i++) assert.equal((await call('/api/dev/certificates',{method:'POST',token,body:{studentName:'Person',courseId:'web',publicConsent:true}})).status,201);
  assert.equal((await call('/api/dev/certificates',{method:'POST',token,body:{studentName:'Person',courseId:'web',publicConsent:true}})).status,429);
  assert.equal((await call('/api/dev/certificates/SUP-00000000000000000000000000000000')).status,404);
  assert.equal((await call('/api/dev/account',{method:'DELETE',token})).json.deleted,true);
