@@ -36,9 +36,12 @@ placeholder buttons or promises of accreditation.
   be completed to unlock creation of a new certificate.
 - This is not a complete multilingual curriculum or a professional translation
   review. Remaining courses, the interface and full lesson text remain English.
-  The separate intermediate paths now offer 28 concise English lessons across
+  The separate intermediate paths now offer 42 English lessons across
   Python, backend, systems, web, DevOps and practical AI; these are starting
-  guides, not full coverage. Other inclusive media remain planned.
+  guides, not full coverage. Each path has a guided project and practice quiz,
+  with selected Python examples runnable in a browser worker. Intermediate
+  progress, project checks and quiz scores can be backed up locally. Other
+  inclusive media remain planned.
 
 ## Motivation and UI — local-first increment
 
@@ -54,7 +57,8 @@ placeholder buttons or promises of accreditation.
 
 - `prototype/cloudflare/` contains an isolated local Worker/D1 experiment for
   throwaway bearer-key accounts, revision-checked backup snapshots, and public
-  test issuance records with explicit consent and deletion. It rejects non-local
+  test issuance records for beginner and intermediate awards with explicit
+  consent and deletion. Completion is not checked. It rejects non-local
   URLs. SQLite and Miniflare/D1 tests run in CI; the live site does not use it.
 - This is not production authentication, cloud sync, public verification, or
   independently verified learning. The prototype README lists security, privacy,

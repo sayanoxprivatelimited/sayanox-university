@@ -4,7 +4,7 @@ const backupVersion = 1;
 const backupMaxBytes = 8 * 1024 * 1024;
 
 function backupKeys() {
-  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course', 'sayanox-certificates-v1', 'sayanox-study-v1', 'sayanox-lesson-language', 'sayanox-weekly-goal', 'sayanox-editor-font-size', 'sayanox-editor-wrap'];
+  const keys = ['sayanox-progress-v1', 'sayanox-quiz-scores', 'sayanox-bookmarks', 'sayanox-last-course', 'sayanox-certificates-v1', 'sayanox-study-v1', 'sayanox-lesson-language', 'sayanox-weekly-goal', 'sayanox-editor-font-size', 'sayanox-editor-wrap', 'sayanox-advanced-progress-v1', 'sayanox-advanced-projects-v1', 'sayanox-advanced-scores-v1'];
   for (const course of courses) {
     keys.push(`sayanox-project-${course.id}`);
     if (codeChallenges[course.id]) codeChallenges[course.id].forEach((_, index) => keys.push(challengeKey(course, index)));
@@ -31,6 +31,17 @@ function validateBackup(backup) {
     if (key === 'sayanox-lesson-language' && !['en', 'bn', 'hi'].includes(value)) throw new Error('Invalid lesson summary language.');
     if (key === 'sayanox-last-course' && !validCourses.has(value)) throw new Error('Backup contains an unknown course.');
     if ((key.startsWith('sayanox-notes-') || key.startsWith('sayanox-draft-') || key.startsWith('sayanox-challenge-')) && value.length > 20000) throw new Error('A note or draft is too long.');
+    if (['sayanox-advanced-progress-v1', 'sayanox-advanced-projects-v1', 'sayanox-advanced-scores-v1'].includes(key)) {
+      const data = parseBackupValue(value, 'intermediate learning data');
+      const isScores = key === 'sayanox-advanced-scores-v1';
+      const field = key === 'sayanox-advanced-projects-v1' ? 'tasks' : 'lessons';
+      if (!validObject(data) || Object.entries(data).some(([id, entries]) => {
+        if (!Object.hasOwn(advancedCatalog, id)) return true;
+        if (isScores) return !Number.isInteger(entries) || entries < 0 || entries > advancedCatalog[id].questions;
+        const limit = advancedCatalog[id][field];
+        return !Array.isArray(entries) || entries.length > limit || new Set(entries).size !== entries.length || entries.some(i => !Number.isInteger(i) || i < 0 || i >= limit);
+      })) throw new Error('Invalid intermediate learning data.');
+    }
     if (key === 'sayanox-progress-v1') {
       const data = parseBackupValue(value, 'lesson progress');
       if (!validObject(data) || Object.entries(data).some(([id, entries]) => !validCourses.has(id) || !Array.isArray(entries) || entries.some(i => !Number.isInteger(i) || i < 0 || i >= validCourses.get(id).lessons.length))) throw new Error('Invalid lesson progress.');
@@ -73,7 +84,11 @@ function restoreBackup(data) {
   // Snapshot all app-owned keys so a failed write can be rolled back.
   const before = new Map(keys.map(key => [key, localStorage.getItem(key)]));
   try {
-    for (const key of keys) localStorage.removeItem(key);
+    for (const key of keys) {
+      // Older backups never contained intermediate data; do not erase it.
+      if (key.startsWith('sayanox-advanced-') && !Object.hasOwn(data, key)) continue;
+      localStorage.removeItem(key);
+    }
     for (const [key, value] of Object.entries(data)) localStorage.setItem(key, value);
   } catch (error) {
     let restored = true;
@@ -115,7 +130,7 @@ document.getElementById('backupFile').addEventListener('change', async event => 
     if (file.size > backupMaxBytes) throw new Error('Backup exceeds the 8 MB limit.');
     const backup = JSON.parse(await file.text());
     const data = validateBackup(backup);
-    if (!window.confirm('Replace all current Sayanox learning data in this browser with this backup? Notes, drafts, bookmarks, scores, certificates and progress not in the file will be removed.')) { backupStatus.textContent = 'Import cancelled. No data was changed.'; return; }
+    if (!window.confirm('Replace all current Sayanox learning data in this browser with this backup? Beginner data not in the file will be removed. Intermediate data is replaced only when present in the backup.')) { backupStatus.textContent = 'Import cancelled. No data was changed.'; return; }
     restoreBackup(data);
     backupStatus.textContent = 'Backup restored in this browser.';
   } catch (error) { backupStatus.textContent = `Could not import backup: ${error.message}`; }

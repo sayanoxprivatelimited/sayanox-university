@@ -1,8 +1,19 @@
 // PRIVATE LOCAL PROTOTYPE. This intentionally refuses non-local URLs.
 // This is not production authentication, a verified assessment, or a live API.
 const courses = Object.freeze({python:'Python Basics',rust:'Getting Started with Rust',c:'C Programming',web:'HTML & CSS Essentials',javascript:'JavaScript Basics',cs:'Computer Science Foundations',go:'Go Fundamentals',sql:'SQL & Databases',git:'Git & Collaboration',ai:'AI Foundations'});
+// Test awards only; completion remains self-reported and is never verified.
+const awards = Object.freeze({...courses,
+  'python-intermediate':'Python Intermediate & Advanced',
+  'python-backend':'Python Backend: APIs, Databases & Deployment',
+  'advanced-c':'Advanced C: Memory, Structures & Files',
+  'rust-intermediate':'Rust Intermediate',
+  'advanced-web':'JavaScript & React',
+  'devops-practical':'DevOps: Docker, Git & Linux',
+  'practical-ai':'Practical Machine Learning & Local LLMs',
+  'intermediate-programme-v1':'Intermediate Learning Programme (version 1)'
+});
 const maxBody = 128 * 1024;
-const backupFixedKeys = new Set(['sayanox-progress-v1','sayanox-quiz-scores','sayanox-bookmarks','sayanox-last-course','sayanox-certificates-v1','sayanox-study-v1','sayanox-lesson-language','sayanox-weekly-goal','sayanox-editor-font-size','sayanox-editor-wrap']);
+const backupFixedKeys = new Set(['sayanox-progress-v1','sayanox-quiz-scores','sayanox-bookmarks','sayanox-last-course','sayanox-certificates-v1','sayanox-study-v1','sayanox-lesson-language','sayanox-weekly-goal','sayanox-editor-font-size','sayanox-editor-wrap','sayanox-advanced-progress-v1','sayanox-advanced-projects-v1','sayanox-advanced-scores-v1']);
 function validBackupKey(key) {
   if (backupFixedKeys.has(key)) return true;
   const match = /^sayanox-(project|notes|draft|challenge)-([a-z]+)(?:-(\d+))?$/.exec(key);
@@ -62,7 +73,7 @@ async function handle(request, env) {
   if (lookup && method === 'GET') {
     const record = await env.DB.prepare('SELECT id, student_name, course_id, issued_at FROM certificates WHERE id = ?').bind(lookup[1]).first();
     if (!record) return problem(404,'No local prototype record found.');
-    return reply(200,{id:record.id, studentName:record.student_name, course:courses[record.course_id], issuedAt:record.issued_at, notice:'Local prototype record only. It does not verify identity, completion, mastery, proctoring or accreditation.'});
+    return reply(200,{id:record.id, studentName:record.student_name, course:awards[record.course_id], issuedAt:record.issued_at, notice:'Local prototype record only. It does not verify identity, completion, mastery, proctoring or accreditation.'});
   }
   if (!['/api/dev/backup','/api/dev/account','/api/dev/certificates'].includes(path)) return problem(404,'Not found.');
   if (!((path === '/api/dev/backup' && ['GET','PUT'].includes(method)) || (path === '/api/dev/account' && method === 'DELETE') || (path === '/api/dev/certificates' && method === 'POST'))) return problem(405,'Method not allowed.');
@@ -83,10 +94,10 @@ async function handle(request, env) {
     if (!updated) return problem(409,'Revision conflict. Fetch the current backup before deciding what to overwrite.');
     return reply(200,{revision:updated.revision});
   }
-  if (!validKeys(data,['studentName','courseId','publicConsent']) || typeof data.studentName !== 'string' || data.studentName.trim().length < 1 || data.studentName.trim().length > 80 || /[\u0000-\u001f\u007f]/.test(data.studentName) || !Object.hasOwn(courses,data.courseId) || data.publicConsent !== true) return problem(400,'Name, supported course, and public-record consent are required.');
+  if (!validKeys(data,['studentName','courseId','publicConsent']) || typeof data.studentName !== 'string' || data.studentName.trim().length < 1 || data.studentName.trim().length > 80 || /[\u0000-\u001f\u007f]/.test(data.studentName) || !Object.hasOwn(awards,data.courseId) || data.publicConsent !== true) return problem(400,'Name, supported course, and public-record consent are required.');
   const id = `SUP-${randomHex(16).toUpperCase()}`, issuedAt = new Date().toISOString();
   // Bounded local prototype data; not a substitute for production abuse controls.
-  const inserted = await env.DB.prepare('INSERT INTO certificates (id, account_id, student_name, course_id, issued_at) SELECT ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM certificates WHERE account_id = ?) < 3 RETURNING id').bind(id,account.id,data.studentName.trim(),data.courseId,issuedAt,account.id).first();
+  const inserted = await env.DB.prepare('INSERT INTO certificates (id, account_id, student_name, course_id, issued_at) SELECT ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM certificates WHERE account_id = ?) < 12 RETURNING id').bind(id,account.id,data.studentName.trim(),data.courseId,issuedAt,account.id).first();
   if (!inserted) return problem(429,'Local prototype limit reached.');
   return reply(201,{id,notice:'Public local prototype record, not proof of identity or achievement.'});
 }
